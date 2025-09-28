@@ -419,6 +419,67 @@ export const useGoogleSheetService = () => {
         }
     }, [isSignedIn, listData, findDerivationColumn]);
 
+    // --- ⭐️ FUNCIÓN GENÉRICA PARA EDITAR CUALQUIER CELDA ---
+    const editCell = useCallback(async (rowIndex: number, columnKey: string, newValue: string) => {
+        if (!isSignedIn) {
+            throw new Error("Debes iniciar sesión para editar.");
+        }
+        try {
+            const sheetRowNumber = rowIndex + 2; // +2 porque headers están en fila 1
+
+            // Obtener cabeceras
+            const headerResponse = await gapi.client.sheets.spreadsheets.values.get({
+                spreadsheetId: SPREADSHEET_ID,
+                range: `${SHEET_NAME}!A1:Z1`,
+            });
+            const headers = headerResponse.result.values?.[0] || [];
+
+            // Normalizar headers
+            const clean = (h: string) => String(h).trim().toLowerCase();
+            const normalizedHeaders: string[] = [];
+            const seen: Record<string, number> = {};
+
+            headers.forEach((h: string) => {
+                let header = clean(h);
+                if (seen[header]) {
+                    header = `${header}_${seen[header] + 1}`;
+                    seen[clean(h)] += 1;
+                } else {
+                    seen[header] = 1;
+                }
+                normalizedHeaders.push(header);
+            });
+
+            // Buscar columna
+            const targetColIndex = normalizedHeaders.findIndex(h => h === columnKey);
+            if (targetColIndex === -1) {
+                throw new Error(`Columna '${columnKey}' no encontrada en la hoja.`);
+            }
+
+            // Calcular celda
+            const targetColLetter = colIndexToLetter(targetColIndex);
+            const range = `${SHEET_NAME}!${targetColLetter}${sheetRowNumber}`;
+
+            // Actualizar celda
+            const resource = {
+                values: [[newValue]],
+            };
+
+            await gapi.client.sheets.spreadsheets.values.update({
+                spreadsheetId: SPREADSHEET_ID,
+                range,
+                valueInputOption: "USER_ENTERED",
+                resource,
+            });
+
+            await listData();
+        } catch (err: any) {
+            console.error("Error al editar celda:", err);
+            setError(err.message || "Fallo al editar la celda.");
+            throw err;
+        }
+    }, [isSignedIn, listData]);
+
 
     return {
     initClient,
@@ -429,10 +490,12 @@ export const useGoogleSheetService = () => {
     error,
     listData,
     userProfile,
+    addRow,
     addDerivationToRow,
     editDerivation,
     deleteDerivation,
-    addRow, 
-};
+    editCell, 
+    };
+
 
 };

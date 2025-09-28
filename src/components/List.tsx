@@ -6,7 +6,7 @@ import AddDocument from "./AddDocument";
 import type { NewDocumentData } from "./AddDocument";
 
 const List: React.FC = () => {
-    const { data, error, listData, addRow, addDerivationToRow, editDerivation, deleteDerivation } = useSheetService();
+    const { data, error, listData, addRow, addDerivationToRow, editDerivation, deleteDerivation, editCell } = useSheetService();
     const [expandedRow, setExpandedRow] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [showModal, setShowModal] = useState(false);
@@ -120,7 +120,17 @@ const List: React.FC = () => {
                         }
                         return deleteDerivation(originalIndex, key);
                     }}
+                    onEditCell={(reversedIndex, columnKey, newValue) => { // 👈 nuevo handler
+                        const rowToUpdate = reversedData[reversedIndex];
+                        const originalIndex = data.findIndex((r) => r === rowToUpdate);
+
+                        if (originalIndex === -1) {
+                            return Promise.reject(new Error("Fila original no encontrada para editar celda."));
+                        }
+                        return editCell(originalIndex, columnKey, newValue);
+                    }}
                 />
+
             </div>
 
             {/* Modal */}

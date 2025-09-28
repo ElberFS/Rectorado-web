@@ -5,6 +5,7 @@ import type { SheetRow } from "../services/useGoogleSheetService";
 import ExpandableText from "./ExpandableText";
 import AddDerivation from "./AddDerivation";
 import ConfirmationModal from "./ConfirmationModal";
+import EditDocument from "./EditDocument";
 
 
 interface EditingState {
@@ -24,6 +25,19 @@ interface DerivationItem {
     value: string;
 }
 
+interface DocumentEditingState {
+    rowIndex: number;
+    formData: {
+        fecha: string;
+        'exp. mesa de partes / sec. gen.': string;
+        'dependencia / usuario': string;
+        asunto: string;
+    };
+}
+
+
+
+
 interface DataTableProps {
     rows: SheetRow[];
     expandedRow: number | null;
@@ -31,6 +45,7 @@ interface DataTableProps {
     onAddDerivation: (rowIndex: number, value: string) => Promise<void>;
     onEditDerivation: (rowIndex: number, key: string, newValue: string) => Promise<void>;
     onDeleteDerivation: (rowIndex: number, key: string) => Promise<void>;
+    onEditCell: (rowIndex: number, key: string, newValue: string) => Promise<void>;
 }
 
 const DISPLAY_COLUMNS = [
@@ -44,11 +59,12 @@ const DISPLAY_COLUMNS = [
     { key: "asunto", label: "ASUNTO", width: "min-w-[400px] flex-1" },
 ];
 
-const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, onAddDerivation, onEditDerivation, onDeleteDerivation }) => {
+const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, onAddDerivation, onEditDerivation, onDeleteDerivation, onEditCell }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [isAdding, setIsAdding] = useState<number | null>(null);
     const [editing, setEditing] = useState<EditingState | null>(null);
     const [deleting, setDeleting] = useState<DeletingState | null>(null);
+    const [docEditing, setDocEditing] = useState<DocumentEditingState | null>(null);
     const rowsPerPage = 10;
 
     const totalPages = Math.ceil(rows.length / rowsPerPage);
@@ -168,12 +184,32 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                                             </td>
                                         ))}
                                         <td className="px-6 py-4">
-                                            <button
-                                                onClick={() => onToggleRow(rowIndex)}
-                                                className="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition text-xs font-semibold"
-                                            >
-                                                {isExpanded ? "Ocultar" : "Ver Derivados"}
-                                            </button>
+                                            <div className="flex flex-col gap-2">
+                                                <button
+                                                    onClick={() => onToggleRow(rowIndex)}
+                                                    className="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition text-xs font-semibold"
+                                                >
+                                                    {isExpanded ? "Ocultar" : "Ver Derivados"}
+                                                </button>
+
+                                                <button
+                                                    onClick={() =>
+                                                        setDocEditing({
+                                                            rowIndex,
+                                                            formData: {
+                                                                fecha: row.fecha || "",
+                                                                "exp. mesa de partes / sec. gen.": row["exp. mesa de partes / sec. gen."] || "",
+                                                                "dependencia / usuario": row["dependencia / usuario"] || "",
+                                                                asunto: row.asunto || "",
+                                                            },
+                                                        })
+                                                    }
+                                                    className="bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-600 transition text-xs font-semibold"
+                                                >
+                                                    ✏️ Editar
+                                                </button>
+                                            </div>
+
                                         </td>
                                     </tr>
 
@@ -300,6 +336,40 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                     Siguiente
                 </button>
             </div>
+            {docEditing && (
+                <div className="fixed inset-0 flex items-center justify-center  bg-opacity-50 z-50">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-3xl w-full p-6 relative">
+                        <button
+                            onClick={() => setDocEditing(null)}
+                            className="absolute top-3 right-3 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+                        >
+                            ✖
+                        </button>
+
+                        <EditDocument
+                            initialData={docEditing.formData}
+                            disabled={false}
+                            onEditRow={async (updatedData) => {
+                                try {
+                                    // Guardar campo por campo en la hoja
+                                    for (const key in updatedData) {
+                                        await onEditCell(
+                                            docEditing.rowIndex,
+                                            key,
+                                            updatedData[key as keyof typeof updatedData]
+                                        );
+                                    }
+                                    setDocEditing(null); // cerrar modal
+                                } catch (err) {
+                                    console.error("Error al guardar cambios del documento:", err);
+                                    alert("Error al guardar cambios.");
+                                }
+                            }}
+                            onSuccess={() => setDocEditing(null)}
+                        />
+                    </div>
+                </div>
+            )}
 
             <ConfirmationModal
                 isOpen={deleting !== null}
