@@ -351,7 +351,6 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                             disabled={false}
                             onEditRow={async (updatedData) => {
                                 try {
-                                    // Guardar campo por campo en la hoja
                                     for (const key in updatedData) {
                                         await onEditCell(
                                             docEditing.rowIndex,
@@ -359,7 +358,7 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                                             updatedData[key as keyof typeof updatedData]
                                         );
                                     }
-                                    setDocEditing(null); // cerrar modal
+                                    setDocEditing(null); 
                                 } catch (err) {
                                     console.error("Error al guardar cambios del documento:", err);
                                     alert("Error al guardar cambios.");

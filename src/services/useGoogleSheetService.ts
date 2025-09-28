@@ -16,7 +16,6 @@ export interface SheetRow {
     [key: string]: any;
 }
 
-// --- 1. CONSTANTES DE CONFIGURACIÓN ---
 const CLIENT_ID = "486408468099-hlh1danal1m7qogpnltti3efgajp08h0.apps.googleusercontent.com";
 const SPREADSHEET_ID = "13cfiJZysi_PrDWHBI-MaJMcfUHe4U6pDxdDz3PyuCmA";
 const SHEET_NAME = "Hoja1";
@@ -25,7 +24,6 @@ const DISCOVERY_DOC = "https://sheets.googleapis.com/$discovery/rest?version=v4"
 
 let tokenClient: any = null;
 
-// --- Funciones Auxiliares ---
 
 const colIndexToLetter = (index: number): string => {
     const startCode = 'A'.charCodeAt(0);
@@ -38,7 +36,6 @@ const colIndexToLetter = (index: number): string => {
 };
 
 
-// --- 2. EL HOOK DE SERVICIO ---
 export const useGoogleSheetService = () => {
     const [isSignedIn, setIsSignedIn] = useState(false);
     const [data, setData] = useState<SheetRow[]>([]);
@@ -185,14 +182,12 @@ export const useGoogleSheetService = () => {
         }
     }, [isSignedIn]);
 
-    // --- Añadir fila completa (nuevo documento) ---
     const addRow = useCallback(async (newRow: Record<string, any>) => {
         if (!isSignedIn) {
             throw new Error("Debes iniciar sesión para añadir filas.");
         }
 
         try {
-            // Obtener cabeceras
             const headerResponse = await gapi.client.sheets.spreadsheets.values.get({
                 spreadsheetId: SPREADSHEET_ID,
                 range: `${SHEET_NAME}!A1:Z1`,
@@ -204,7 +199,6 @@ export const useGoogleSheetService = () => {
                 throw new Error("La hoja no tiene cabeceras en la fila 1. Añade las cabeceras antes de insertar filas.");
             }
 
-            // Normalizar cabeceras igual que en listData / findDerivationColumn
             const clean = (h: string) => String(h).trim().toLowerCase();
             const normalizedHeaders: string[] = [];
             const seen: Record<string, number> = {};
@@ -220,10 +214,7 @@ export const useGoogleSheetService = () => {
                 normalizedHeaders.push(header);
             });
 
-            // Construir fila en el mismo orden de cabeceras
             const rowArray = normalizedHeaders.map((normHeader) => {
-                // Si newRow trae directamente la key normalizada, úsala.
-                // Si la cabecera tiene sufijo (_2, _3), intentar usar la key base (sin sufijo).
                 const baseKey = normHeader.replace(/_[0-9]+$/, "");
                 const val = (newRow as any)[normHeader] ?? (newRow as any)[baseKey] ?? "";
                 return String(val ?? "").trim();
@@ -239,7 +230,6 @@ export const useGoogleSheetService = () => {
                 resource,
             });
 
-            // Refrescar datos
             await listData();
             setError(null);
         } catch (err: any) {
@@ -254,7 +244,6 @@ export const useGoogleSheetService = () => {
             throw new Error("Debes iniciar sesión para añadir derivaciones.");
         }
 
-        // La fila de la hoja es el rowIndex (base 0 en el array) + 2 (por la fila de cabecera y base 1 de las filas)
         const sheetRowNumber = rowIndex + 2;
 
         try {
@@ -277,7 +266,6 @@ export const useGoogleSheetService = () => {
                 const header = String(headers[i] || "").toLowerCase().trim();
                 const cellValue = String(rowValues[i] || "").trim();
 
-                // Buscamos la primera columna "derivado" que esté vacía
                 if (header.includes("derivado") && cellValue === "") {
                     targetColIndex = i;
                     break;
@@ -285,7 +273,6 @@ export const useGoogleSheetService = () => {
             }
 
             if (targetColIndex === -1) {
-                // Si todas están llenas, buscamos la última columna "derivado"
                 for (let i = headers.length - 1; i >= 0; i--) {
                     const header = String(headers[i] || "").toLowerCase().trim();
                     if (header.includes("derivado")) {
@@ -324,7 +311,6 @@ export const useGoogleSheetService = () => {
     }, [isSignedIn, listData]);
 
 
-    // --- ⭐️ NUEVA FUNCIÓN PARA OBTENER LA POSICIÓN DE LA COLUMNA
     const findDerivationColumn = useCallback(async (rowIndex: number, derivationKey: string) => {
         const sheetRowNumber = rowIndex + 2;
 
@@ -336,7 +322,6 @@ export const useGoogleSheetService = () => {
 
         let targetColIndex = -1;
 
-        // Limpiamos y normalizamos las cabeceras para encontrar el key exacto
         const normalizedHeaders: string[] = [];
         const seen: Record<string, number> = {};
 
@@ -364,7 +349,6 @@ export const useGoogleSheetService = () => {
         };
     }, []);
 
-    // --- ⭐️ NUEVA FUNCIÓN PARA EDITAR ---
     const editDerivation = useCallback(async (rowIndex: number, derivationKey: string, newValue: string) => {
         if (!isSignedIn) {
             throw new Error("Debes iniciar sesión para editar.");
@@ -391,7 +375,6 @@ export const useGoogleSheetService = () => {
         }
     }, [isSignedIn, listData, findDerivationColumn]);
 
-    // --- ⭐️ NUEVA FUNCIÓN PARA ELIMINAR ---
     const deleteDerivation = useCallback(async (rowIndex: number, derivationKey: string) => {
         if (!isSignedIn) {
             throw new Error("Debes iniciar sesión para eliminar.");
@@ -399,7 +382,6 @@ export const useGoogleSheetService = () => {
         try {
             const { range } = await findDerivationColumn(rowIndex, derivationKey);
 
-            // Para "eliminar" una celda, simplemente la actualizamos a vacío
             const resource = {
                 values: [[""]],
             };
@@ -419,7 +401,6 @@ export const useGoogleSheetService = () => {
         }
     }, [isSignedIn, listData, findDerivationColumn]);
 
-    // --- ⭐️ FUNCIÓN GENÉRICA PARA EDITAR CUALQUIER CELDA ---
     const editCell = useCallback(async (rowIndex: number, columnKey: string, newValue: string) => {
         if (!isSignedIn) {
             throw new Error("Debes iniciar sesión para editar.");
@@ -427,14 +408,12 @@ export const useGoogleSheetService = () => {
         try {
             const sheetRowNumber = rowIndex + 2; // +2 porque headers están en fila 1
 
-            // Obtener cabeceras
             const headerResponse = await gapi.client.sheets.spreadsheets.values.get({
                 spreadsheetId: SPREADSHEET_ID,
                 range: `${SHEET_NAME}!A1:Z1`,
             });
             const headers = headerResponse.result.values?.[0] || [];
 
-            // Normalizar headers
             const clean = (h: string) => String(h).trim().toLowerCase();
             const normalizedHeaders: string[] = [];
             const seen: Record<string, number> = {};
@@ -450,17 +429,14 @@ export const useGoogleSheetService = () => {
                 normalizedHeaders.push(header);
             });
 
-            // Buscar columna
             const targetColIndex = normalizedHeaders.findIndex(h => h === columnKey);
             if (targetColIndex === -1) {
                 throw new Error(`Columna '${columnKey}' no encontrada en la hoja.`);
             }
 
-            // Calcular celda
             const targetColLetter = colIndexToLetter(targetColIndex);
             const range = `${SHEET_NAME}!${targetColLetter}${sheetRowNumber}`;
 
-            // Actualizar celda
             const resource = {
                 values: [[newValue]],
             };

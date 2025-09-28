@@ -11,10 +11,10 @@ export interface EditDocumentData {
 }
 
 interface EditDocumentProps {
-    initialData: EditDocumentData;   // Datos actuales de la fila
+    initialData: EditDocumentData;  
     onEditRow: (data: EditDocumentData) => Promise<void>;
     disabled: boolean;
-    onSuccess?: () => void;          // Para cerrar modal o refrescar después del éxito
+    onSuccess?: () => void;          
 }
 
 const EditDocument: React.FC<EditDocumentProps> = ({ initialData, onEditRow, disabled, onSuccess }) => {
@@ -47,7 +47,7 @@ const EditDocument: React.FC<EditDocumentProps> = ({ initialData, onEditRow, dis
         setIsSaving(true);
         try {
             await onEditRow(formData);
-            onSuccess?.(); // cerrar modal o refrescar tabla
+            onSuccess?.(); 
         } catch (error) {
             console.error("Error al editar la fila:", error);
             alert("Error al guardar los cambios. Inténtalo de nuevo.");
@@ -65,7 +65,6 @@ const EditDocument: React.FC<EditDocumentProps> = ({ initialData, onEditRow, dis
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-8">
-                {/* FECHA */}
                 <div>
                     <label htmlFor="fecha" className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
                         FECHA
@@ -82,7 +81,6 @@ const EditDocument: React.FC<EditDocumentProps> = ({ initialData, onEditRow, dis
 
                 </div>
 
-                {/* EXP */}
                 <div>
                     <label htmlFor="exp" className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
                         EXP. MESA DE PARTES
@@ -98,7 +96,6 @@ const EditDocument: React.FC<EditDocumentProps> = ({ initialData, onEditRow, dis
                     />
                 </div>
 
-                {/* DEPENDENCIA */}
                 <div className="md:col-span-2">
                     <label htmlFor="dependencia" className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
                         DEPENDENCIA / USUARIO
@@ -114,7 +111,6 @@ const EditDocument: React.FC<EditDocumentProps> = ({ initialData, onEditRow, dis
                     />
                 </div>
 
-                {/* ASUNTO */}
                 <div className="md:col-span-2">
                     <label htmlFor="asunto" className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
                         ASUNTO

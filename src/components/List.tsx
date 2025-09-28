@@ -39,7 +39,6 @@ const List: React.FC = () => {
         );
     }
 
-    // Filtrar
     const filteredData = data.filter((row: SheetRow) => {
         const asunto = row["asunto"]?.toLowerCase() || "";
         const exp = row["exp. mesa de partes / sec. gen."]?.toLowerCase() || "";
@@ -49,15 +48,13 @@ const List: React.FC = () => {
         );
     });
 
-    // Revertir para mostrar último registro primero
     const reversedData = [...filteredData].reverse();
 
-    // Lógica para añadir un nuevo documento (se conecta al servicio)
     const handleAddDocument = async (newDoc: NewDocumentData) => {
-        // aquí asumo que tienes un método addRow en tu servicio (ajusta si tiene otro nombre)
+        
         await addRow(newDoc);
-        await listData(); // recargar datos
-        setShowModal(false); // cerrar modal
+        await listData(); 
+        setShowModal(false);
     };
 
     return (
@@ -133,7 +130,6 @@ const List: React.FC = () => {
 
             </div>
 
-            {/* Modal */}
             {showModal && (
                 <div className="fixed inset-0 flex items-center justify-center  bg-opacity-50 z-50">
                     <div className="bg-zinc-50 dark:bg-gray-800 rounded-xl shadow-xl max-w-3xl w-full p-6 relative">

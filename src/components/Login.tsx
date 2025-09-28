@@ -2,10 +2,8 @@ import React, { useEffect } from 'react';
 import { useSheetService } from '../services/GoogleSheetProvider';
 
 const Login: React.FC = () => {
-    // Obtenemos las funciones de inicialización y autenticación del hook
     const { initClient, signIn, isSignedIn, error } = useSheetService();
 
-    // 1. Inicializa la API de Google al montar el componente (solo una vez)
     useEffect(() => {
         initClient();
     }, [initClient]);
@@ -17,7 +15,6 @@ const Login: React.FC = () => {
                     Acceso al Panel de Control
                 </h2>
                 
-                {/* Muestra errores de inicialización o login */}
                 {error && (
                     <div className="p-3 mb-4 text-sm text-red-800 bg-red-100 rounded-lg">
                         {error}
@@ -25,12 +22,10 @@ const Login: React.FC = () => {
                 )}
 
                 {isSignedIn ? (
-                    // Si ya está logueado, muestra un mensaje (App.tsx debería redirigir a List.tsx)
                     <p className="text-green-600 font-semibold">
                         ✅ Sesión iniciada. Redirigiendo...
                     </p>
                 ) : (
-                    // Botón para iniciar el flujo de autenticación de Google
                     <button
                         onClick={signIn}
                         className="w-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition duration-300"

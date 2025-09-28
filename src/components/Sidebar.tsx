@@ -29,7 +29,6 @@ const Sidebar: React.FC = () => {
             )}
 
             <nav className="flex-grow">
-                {/* Aquí puedes agregar tus enlaces de navegación */}
             </nav>
 
             <button

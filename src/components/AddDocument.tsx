@@ -12,7 +12,6 @@ export interface NewDocumentData {
 interface AddDocumentProps {
     onAddRow: (data: NewDocumentData) => Promise<void>;
     disabled: boolean;
-    // Agregamos una prop para cerrar el modal después del éxito (opcional)
     onSuccess?: () => void; 
 }
 
@@ -54,7 +53,7 @@ const AddDocument: React.FC<AddDocumentProps> = ({ onAddRow, disabled, onSuccess
         try {
             await onAddRow(formData);
             setFormData(initialFormData); 
-            onSuccess?.(); // Llama a la función de éxito para cerrar el modal
+            onSuccess?.(); 
         } catch (error) {
             console.error("Error al añadir la fila:", error);
             alert("Error al guardar el nuevo documento. Inténtalo de nuevo.");
@@ -65,7 +64,6 @@ const AddDocument: React.FC<AddDocumentProps> = ({ onAddRow, disabled, onSuccess
 
     const isOperationDisabled = disabled || isSaving;
 
-    // NOTA: EL FONDO NEGRO Y EL ENVOLTORIO DEL MODAL SE HAN ELIMINADO DE AQUÍ.
     return (
         <form onSubmit={handleSubmit}>
             <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-3">
@@ -74,7 +72,6 @@ const AddDocument: React.FC<AddDocumentProps> = ({ onAddRow, disabled, onSuccess
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-8">
                 
-                {/* 1. FECHA */}
                 <div className="col-span-1">
                     <label htmlFor="fecha" className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
                         FECHA
@@ -90,7 +87,6 @@ const AddDocument: React.FC<AddDocumentProps> = ({ onAddRow, disabled, onSuccess
                     />
                 </div>
                 
-                {/* 2. EXP. MESA DE PARTES / SEC. GEN. */}
                 <div className="col-span-1">
                     <label htmlFor="exp" className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
                         EXP. MESA DE PARTES
@@ -107,7 +103,6 @@ const AddDocument: React.FC<AddDocumentProps> = ({ onAddRow, disabled, onSuccess
                     />
                 </div>
                 
-                {/* 3. DEPENDENCIA / USUARIO (Ocupa toda la fila en móvil, dos columnas en escritorio) */}
                 <div className="md:col-span-2">
                     <label htmlFor="dependencia" className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
                         DEPENDENCIA / USUARIO
@@ -124,7 +119,6 @@ const AddDocument: React.FC<AddDocumentProps> = ({ onAddRow, disabled, onSuccess
                     />
                 </div>
                 
-                {/* 4. ASUNTO (Ocupa toda la fila) */}
                 <div className="md:col-span-2">
                     <label htmlFor="asunto" className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
                         ASUNTO
