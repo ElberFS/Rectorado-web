@@ -185,6 +185,69 @@ export const useGoogleSheetService = () => {
         }
     }, [isSignedIn]);
 
+    // --- Añadir fila completa (nuevo documento) ---
+    const addRow = useCallback(async (newRow: Record<string, any>) => {
+        if (!isSignedIn) {
+            throw new Error("Debes iniciar sesión para añadir filas.");
+        }
+
+        try {
+            // Obtener cabeceras
+            const headerResponse = await gapi.client.sheets.spreadsheets.values.get({
+                spreadsheetId: SPREADSHEET_ID,
+                range: `${SHEET_NAME}!A1:Z1`,
+            });
+
+            const headersRaw: string[] = headerResponse.result.values?.[0] || [];
+
+            if (headersRaw.length === 0) {
+                throw new Error("La hoja no tiene cabeceras en la fila 1. Añade las cabeceras antes de insertar filas.");
+            }
+
+            // Normalizar cabeceras igual que en listData / findDerivationColumn
+            const clean = (h: string) => String(h).trim().toLowerCase();
+            const normalizedHeaders: string[] = [];
+            const seen: Record<string, number> = {};
+
+            headersRaw.forEach((h: string) => {
+                let header = clean(h);
+                if (seen[header]) {
+                    header = `${header}_${seen[header] + 1}`;
+                    seen[clean(h)] += 1;
+                } else {
+                    seen[header] = 1;
+                }
+                normalizedHeaders.push(header);
+            });
+
+            // Construir fila en el mismo orden de cabeceras
+            const rowArray = normalizedHeaders.map((normHeader) => {
+                // Si newRow trae directamente la key normalizada, úsala.
+                // Si la cabecera tiene sufijo (_2, _3), intentar usar la key base (sin sufijo).
+                const baseKey = normHeader.replace(/_[0-9]+$/, "");
+                const val = (newRow as any)[normHeader] ?? (newRow as any)[baseKey] ?? "";
+                return String(val ?? "").trim();
+            });
+
+            const resource = { values: [rowArray] };
+
+            await gapi.client.sheets.spreadsheets.values.append({
+                spreadsheetId: SPREADSHEET_ID,
+                range: `${SHEET_NAME}!A:Z`,
+                valueInputOption: "USER_ENTERED",
+                insertDataOption: "INSERT_ROWS",
+                resource,
+            });
+
+            // Refrescar datos
+            await listData();
+            setError(null);
+        } catch (err: any) {
+            console.error("Error al añadir fila:", err);
+            setError(err?.message || "Fallo al añadir la fila.");
+            throw err;
+        }
+    }, [isSignedIn, listData]);
 
     const addDerivationToRow = useCallback(async (rowIndex: number, value: string) => {
         if (!isSignedIn) {
@@ -358,16 +421,18 @@ export const useGoogleSheetService = () => {
 
 
     return {
-        initClient,
-        signIn,
-        signOut,
-        isSignedIn,
-        data,
-        error,
-        listData,
-        userProfile,
-        addDerivationToRow,
-        editDerivation, 
-        deleteDerivation, 
-    };
+    initClient,
+    signIn,
+    signOut,
+    isSignedIn,
+    data,
+    error,
+    listData,
+    userProfile,
+    addDerivationToRow,
+    editDerivation,
+    deleteDerivation,
+    addRow, 
+};
+
 };
