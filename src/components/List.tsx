@@ -4,7 +4,7 @@ import { useSheetService } from "../services/GoogleSheetProvider";
 import DataTable from "./DataTable";
 
 const List: React.FC = () => {
-    const { data, error, listData, addDerivationToRow } = useSheetService();
+    const { data, error, listData, addDerivationToRow, editDerivation, deleteDerivation } = useSheetService();
     const [expandedRow, setExpandedRow] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
 
@@ -74,19 +74,34 @@ const List: React.FC = () => {
                     onToggleRow={(index) =>
                         setExpandedRow(expandedRow === index ? null : index)
                     }
+                    // Función para AÑADIR
                     onAddDerivation={(reversedIndex, value) => {
-                        // ⭐️ CORRECCIÓN CLAVE: Encontrar la fila en el array NO revertido
                         const rowToUpdate = reversedData[reversedIndex];
-                        const originalIndex = data.findIndex(
-                            (r) => r === rowToUpdate
-                        );
+                        const originalIndex = data.findIndex((r) => r === rowToUpdate);
 
                         if (originalIndex === -1) {
-                            throw new Error("Fila original no encontrada para actualizar.");
+                            return Promise.reject(new Error("Fila original no encontrada."));
                         }
-
                         // originalIndex es base 0 y corresponde a la fila de datos (después de la cabecera)
                         return addDerivationToRow(originalIndex, value);
+                    }}
+                    onEditDerivation={(reversedIndex, key, newValue) => {
+                        const rowToUpdate = reversedData[reversedIndex];
+                        const originalIndex = data.findIndex((r) => r === rowToUpdate);
+
+                        if (originalIndex === -1) {
+                            return Promise.reject(new Error("Fila original no encontrada para editar."));
+                        }
+                        return editDerivation(originalIndex, key, newValue);
+                    }}
+                    onDeleteDerivation={(reversedIndex, key) => {
+                        const rowToUpdate = reversedData[reversedIndex];
+                        const originalIndex = data.findIndex((r) => r === rowToUpdate);
+
+                        if (originalIndex === -1) {
+                            return Promise.reject(new Error("Fila original no encontrada para eliminar."));
+                        }
+                        return deleteDerivation(originalIndex, key);
                     }}
                 />
             </div>

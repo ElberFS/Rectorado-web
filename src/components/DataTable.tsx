@@ -1,14 +1,36 @@
+// src/components/DataTable.tsx
+
 import React, { useState } from "react";
 import type { SheetRow } from "../services/useGoogleSheetService";
 import ExpandableText from "./ExpandableText";
 import AddDerivation from "./AddDerivation";
+import ConfirmationModal from "./ConfirmationModal";
 
+
+interface EditingState {
+    rowIndex: number;
+    key: string;
+    currentValue: string;
+}
+
+interface DeletingState {
+    rowIndex: number;
+    key: string;
+    label: string;
+}
+
+interface DerivationItem {
+    key: string;
+    value: string;
+}
 
 interface DataTableProps {
     rows: SheetRow[];
     expandedRow: number | null;
     onToggleRow: (index: number) => void;
     onAddDerivation: (rowIndex: number, value: string) => Promise<void>;
+    onEditDerivation: (rowIndex: number, key: string, newValue: string) => Promise<void>;
+    onDeleteDerivation: (rowIndex: number, key: string) => Promise<void>;
 }
 
 const DISPLAY_COLUMNS = [
@@ -22,9 +44,11 @@ const DISPLAY_COLUMNS = [
     { key: "asunto", label: "ASUNTO", width: "min-w-[400px] flex-1" },
 ];
 
-const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, onAddDerivation }) => {
+const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, onAddDerivation, onEditDerivation, onDeleteDerivation }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [isAdding, setIsAdding] = useState<number | null>(null);
+    const [editing, setEditing] = useState<EditingState | null>(null);
+    const [deleting, setDeleting] = useState<DeletingState | null>(null);
     const rowsPerPage = 10;
 
     const totalPages = Math.ceil(rows.length / rowsPerPage);
@@ -53,6 +77,48 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
         }
     };
 
+    const handleEditSave = async () => {
+        if (!editing) return;
+
+        const { rowIndex, key, currentValue } = editing;
+
+        if (currentValue.trim() === "") {
+            alert("La derivación no puede estar vacía.");
+            return;
+        }
+
+        try {
+            await onEditDerivation(rowIndex, key, currentValue);
+            setEditing(null);
+        } catch (error) {
+            console.error("Error al editar:", error);
+            alert("Error al guardar la edición. Inténtalo de nuevo.");
+        }
+    };
+
+    const confirmDelete = (rowIndex: number, key: string, label: string) => {
+        setDeleting({ rowIndex, key, label });
+    };
+
+    const cancelDelete = () => {
+        setDeleting(null);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!deleting) return;
+
+        const { rowIndex, key } = deleting;
+        setDeleting(null);
+
+        try {
+            await onDeleteDerivation(rowIndex, key);
+        } catch (error) {
+            console.error("Error al eliminar:", error);
+            alert("Error al eliminar la derivación. Inténtalo de nuevo.");
+        }
+    };
+
+
     return (
         <>
             <div className="overflow-x-auto rounded-xl">
@@ -79,8 +145,7 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                             const isExpanded = expandedRow === rowIndex;
                             const addingState = isAdding === rowIndex;
 
-                            // derivaciones con contenido
-                            const derivations = Object.keys(row)
+                            const derivations: DerivationItem[] = Object.keys(row)
                                 .filter((key) => key.toLowerCase().includes("derivado"))
                                 .filter((key) => row[key] && row[key].trim() !== "")
                                 .map((key) => ({ key, value: row[key] }));
@@ -120,17 +185,56 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                                                 ) : (
                                                     <div className="space-y-4">
                                                         {derivations.map((d, i) => (
-                                                            <div
-                                                                key={i}
-                                                                className="border-l-4 border-blue-600 bg-white dark:bg-gray-900 shadow-md rounded-lg p-4"
-                                                            >
-                                                                <p className="text-sm text-gray-700 dark:text-gray-300">
-                                                                    <span className="font-semibold text-blue-700 dark:text-blue-400">
-                                                                        {d.key.replace(/_/g, " ")}:
-                                                                    </span>{" "}
-                                                                    {d.value}
-                                                                </p>
-                                                            </div>
+                                                            editing?.rowIndex === rowIndex && editing.key === d.key ? (
+                                                                <div key={i} className="flex space-x-2 p-4 bg-yellow-100 dark:bg-yellow-900 border-l-4 border-yellow-500 rounded-lg">
+                                                                    <input
+                                                                        type="text"
+                                                                        value={editing.currentValue}
+                                                                        onChange={(e) => setEditing({ ...editing, currentValue: e.target.value })}
+                                                                        className="flex-1 px-3 py-2 border rounded-lg text-sm text-gray-900 dark:text-white dark:bg-gray-700"
+                                                                    />
+                                                                    <button
+                                                                        onClick={handleEditSave}
+                                                                        className="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition text-sm font-semibold"
+                                                                    >
+                                                                        Guardar
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => setEditing(null)}
+                                                                        className="bg-gray-400 text-white px-3 py-2 rounded-lg hover:bg-gray-500 transition text-sm font-semibold"
+                                                                    >
+                                                                        Cancelar
+                                                                    </button>
+                                                                </div>
+                                                            ) : (
+                                                                <div
+                                                                    key={i}
+                                                                    className="border-l-4 border-blue-600 bg-white dark:bg-gray-900 shadow-md rounded-lg p-4 flex justify-between items-start"
+                                                                >
+                                                                    <p className="text-sm text-gray-700 dark:text-gray-300 flex-1">
+                                                                        <span className="font-semibold text-blue-700 dark:text-blue-400">
+                                                                            {d.key.replace(/_/g, " ")}:
+                                                                        </span>{" "}
+                                                                        {d.value}
+                                                                    </p>
+                                                                    <div className="flex space-x-2 ml-4">
+                                                                        <button
+                                                                            onClick={() => setEditing({ rowIndex, key: d.key, currentValue: d.value })}
+                                                                            className="text-yellow-600 hover:text-yellow-800 transition p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+                                                                            title="Editar"
+                                                                        >
+                                                                            ✏️
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => confirmDelete(rowIndex, d.key, d.value)}
+                                                                            className="text-red-600 hover:text-red-800 transition p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+                                                                            title="Eliminar"
+                                                                        >
+                                                                            🗑️
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            )
                                                         ))}
                                                     </div>
                                                 )}
@@ -140,7 +244,7 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                                                 )}
 
                                                 <AddDerivation
-                                                    disabled={addingState}
+                                                    disabled={addingState || editing !== null || deleting !== null}
                                                     onAdd={(newValue: string) => {
                                                         handleAddDerivation(rowIndex, newValue);
                                                     }}
@@ -156,7 +260,6 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                 </table>
             </div>
 
-            {/* 📌 Paginación */}
             <div className="flex justify-between items-center mt-0 p-4 border-t border-gray-700">
                 <button
                     disabled={currentPage === 1}
@@ -197,6 +300,14 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                     Siguiente
                 </button>
             </div>
+
+            <ConfirmationModal
+                isOpen={deleting !== null}
+                title="Confirmar Eliminación"
+                message={`¿Estás seguro de que quieres eliminar la derivación "${deleting?.label || 'seleccionada'}"? Esta acción no se puede deshacer.`}
+                onConfirm={handleConfirmDelete}
+                onCancel={cancelDelete}
+            />
         </>
     );
 };
