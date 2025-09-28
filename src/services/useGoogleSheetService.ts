@@ -150,7 +150,21 @@ export const useGoogleSheetService = () => {
             const values = response.result.values;
             if (values && values.length > 1) {
                 const cleanHeader = (h: string) => String(h).trim().toLowerCase();
-                const headers = values[0].map(cleanHeader);
+
+                const headers: string[] = [];
+                const seen: Record<string, number> = {};
+
+                values[0].forEach((h: string) => {
+                    let header = cleanHeader(h);
+                    if (seen[header]) {
+                        header = `${header}_${seen[header] + 1}`;
+                        seen[cleanHeader(h)] += 1;
+                    } else {
+                        seen[header] = 1;
+                    }
+                    headers.push(header);
+                });
+
 
                 const rows = values.slice(1).map((row: any[]) => {
                     const rowObject: Partial<SheetRow> = {};
