@@ -1,11 +1,10 @@
-// src/components/List.tsx
 import React, { useEffect, useState } from "react";
 import type { SheetRow } from "../services/useGoogleSheetService";
 import { useSheetService } from "../services/GoogleSheetProvider";
 import DataTable from "./DataTable";
 
 const List: React.FC = () => {
-    const { data, error, listData } = useSheetService();
+    const { data, error, listData, addDerivationToRow } = useSheetService();
     const [expandedRow, setExpandedRow] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
 
@@ -37,7 +36,7 @@ const List: React.FC = () => {
         );
     }
 
-    // 👉 Filtrar por búsqueda
+    // Filtrar
     const filteredData = data.filter((row: SheetRow) => {
         const asunto = row["asunto"]?.toLowerCase() || "";
         const exp = row["exp. mesa de partes / sec. gen."]?.toLowerCase() || "";
@@ -47,12 +46,11 @@ const List: React.FC = () => {
         );
     });
 
-    // 👉 Mostrar desde el último registro primero
+    // Revertir para mostrar último registro primero
     const reversedData = [...filteredData].reverse();
 
     return (
         <div className="p-0">
-            {/* 🔍 Buscador + Recargar */}
             <div className="flex justify-between items-center mb-6">
                 <input
                     type="text"
@@ -69,7 +67,6 @@ const List: React.FC = () => {
                 </button>
             </div>
 
-            {/* 📋 Tabla con paginación */}
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl p-0">
                 <DataTable
                     rows={reversedData}
@@ -77,6 +74,20 @@ const List: React.FC = () => {
                     onToggleRow={(index) =>
                         setExpandedRow(expandedRow === index ? null : index)
                     }
+                    onAddDerivation={(reversedIndex, value) => {
+                        // ⭐️ CORRECCIÓN CLAVE: Encontrar la fila en el array NO revertido
+                        const rowToUpdate = reversedData[reversedIndex];
+                        const originalIndex = data.findIndex(
+                            (r) => r === rowToUpdate
+                        );
+
+                        if (originalIndex === -1) {
+                            throw new Error("Fila original no encontrada para actualizar.");
+                        }
+
+                        // originalIndex es base 0 y corresponde a la fila de datos (después de la cabecera)
+                        return addDerivationToRow(originalIndex, value);
+                    }}
                 />
             </div>
         </div>

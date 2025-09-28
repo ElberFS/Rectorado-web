@@ -1,12 +1,14 @@
-// src/components/DataTable.tsx
 import React, { useState } from "react";
 import type { SheetRow } from "../services/useGoogleSheetService";
 import ExpandableText from "./ExpandableText";
+import AddDerivation from "./AddDerivation";
+
 
 interface DataTableProps {
     rows: SheetRow[];
     expandedRow: number | null;
     onToggleRow: (index: number) => void;
+    onAddDerivation: (rowIndex: number, value: string) => Promise<void>;
 }
 
 const DISPLAY_COLUMNS = [
@@ -20,8 +22,9 @@ const DISPLAY_COLUMNS = [
     { key: "asunto", label: "ASUNTO", width: "min-w-[400px] flex-1" },
 ];
 
-const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow }) => {
+const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, onAddDerivation }) => {
     const [currentPage, setCurrentPage] = useState(1);
+    const [isAdding, setIsAdding] = useState<number | null>(null);
     const rowsPerPage = 10;
 
     const totalPages = Math.ceil(rows.length / rowsPerPage);
@@ -35,6 +38,18 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow })
         const value = parseInt(e.target.value, 10);
         if (!isNaN(value) && value >= 1 && value <= totalPages) {
             setCurrentPage(value);
+        }
+    };
+
+    const handleAddDerivation = async (rowIndex: number, value: string) => {
+        setIsAdding(rowIndex);
+        try {
+            await onAddDerivation(rowIndex, value);
+        } catch (error) {
+            console.error("Error al añadir derivación:", error);
+            alert("Error al guardar la derivación. Inténtalo de nuevo.");
+        } finally {
+            setIsAdding(null);
         }
     };
 
@@ -62,6 +77,7 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow })
                         {paginatedRows.map((row: SheetRow, index: number) => {
                             const rowIndex = startIndex + index;
                             const isExpanded = expandedRow === rowIndex;
+                            const addingState = isAdding === rowIndex;
 
                             // derivaciones con contenido
                             const derivations = Object.keys(row)
@@ -98,14 +114,9 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow })
 
                                     {isExpanded && (
                                         <tr>
-                                            <td
-                                                colSpan={DISPLAY_COLUMNS.length + 1}
-                                                className="bg-gray-50 dark:bg-gray-800 px-6 py-6"
-                                            >
+                                            <td colSpan={DISPLAY_COLUMNS.length + 1} className="bg-gray-50 dark:bg-gray-800 px-6 py-6">
                                                 {derivations.length === 0 ? (
-                                                    <p className="text-gray-600 dark:text-gray-400">
-                                                        No hay derivaciones registradas.
-                                                    </p>
+                                                    <p className="text-gray-600 dark:text-gray-400">No hay derivaciones registradas.</p>
                                                 ) : (
                                                     <div className="space-y-4">
                                                         {derivations.map((d, i) => (
@@ -123,9 +134,21 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow })
                                                         ))}
                                                     </div>
                                                 )}
+
+                                                {addingState && (
+                                                    <p className="text-blue-500 dark:text-blue-400 mt-2 font-semibold">Guardando derivación... ⏳</p>
+                                                )}
+
+                                                <AddDerivation
+                                                    disabled={addingState}
+                                                    onAdd={(newValue: string) => {
+                                                        handleAddDerivation(rowIndex, newValue);
+                                                    }}
+                                                />
                                             </td>
                                         </tr>
                                     )}
+
                                 </React.Fragment>
                             );
                         })}
@@ -139,8 +162,8 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow })
                     disabled={currentPage === 1}
                     onClick={goToPrevPage}
                     className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${currentPage === 1
-                            ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                            : "bg-gray-300 hover:bg-gray-400 text-gray-800"
+                        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                        : "bg-gray-300 hover:bg-gray-400 text-gray-800"
                         }`}
                 >
                     Anterior
@@ -167,8 +190,8 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow })
                     disabled={currentPage === totalPages}
                     onClick={goToNextPage}
                     className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${currentPage === totalPages
-                            ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                            : "bg-gray-800 hover:bg-gray-900 text-white"
+                        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                        : "bg-gray-800 hover:bg-gray-900 text-white"
                         }`}
                 >
                     Siguiente
