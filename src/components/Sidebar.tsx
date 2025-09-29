@@ -2,26 +2,58 @@
 import React from "react";
 import { useSheetService } from "../services/GoogleSheetProvider";
 
-const Sidebar: React.FC = () => {
+interface SidebarProps {
+    isOpen: boolean;
+    toggle: () => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     const { signOut, userProfile } = useSheetService();
+    
+    const isMinimized = !isOpen;
+
+    const sidebarClasses = `
+        h-screen bg-white text-gray-800 flex flex-col p-6 shadow-2xl fixed left-0 top-0 z-30 
+        border-r border-gray-100 transition-all duration-300 overflow-x-hidden
+        // En pantallas grandes (lg), alterna entre ancho completo (w-56) y minimizado (w-20)
+        lg:${isOpen ? 'w-56' : 'w-20'} 
+        // En pantallas pequeñas, usa la traducción X (visible o escondido)
+        ${isOpen ? 'translate-x-0 w-56' : '-translate-x-full w-56'} 
+    `;
 
     return (
-        <aside className="w-56 h-screen bg-white text-gray-800 flex flex-col p-6 shadow-lg fixed left-0 top-0 z-30 border-r border-gray-200">
-
-            <h2 className="text-2xl font-extrabold text-blue-500 mb-10">Sistema Rectorado</h2>
-
+        <aside className={sidebarClasses}>
+            
+            {/* Logo y Título */}
+            <div className="flex items-center mb-10 overflow-hidden">
+                <img 
+                    src="/LogoColor.png" 
+                    alt="Logo Rectorado" 
+                    className={`w-8 h-8 ${isMinimized ? 'mr-0' : 'mr-2'} rounded-lg transition-all duration-300`} 
+                />
+                <h2 className={`text-xl font-black text-blue-600 tracking-tight transition-opacity duration-300 ${isMinimized ? 'opacity-0 hidden lg:inline' : 'opacity-100'}`}>
+                    Rectorado
+                </h2>
+            </div>
+            
+            {/* Perfil de Usuario */}
             {userProfile && (
-                <div className="flex flex-col items-start mb-12 border-b border-gray-200 pb-4">
-                    <img
-                        src={userProfile.imageUrl || "URL_IMAGEN_DEFAULT"}
-                        alt="User"
-                        className="w-12 h-12 rounded-full border-2 border-blue-400 mb-3"
-                    />
-                    <div>
-                        <p className="font-semibold text-lg truncate" title={userProfile.name}>
+                <div className={`flex flex-col items-center border-b border-gray-100 pb-5 mb-8 transition-all duration-300 ${isMinimized ? 'items-center' : 'items-start'}`}>
+                    
+                    <div className="relative mb-3">
+                        <img
+                            src={userProfile.imageUrl || "/LogoColor.png"} 
+                            alt="User Avatar"
+                            className="w-12 h-12 rounded-full object-cover border-4 border-blue-500 shadow-md"
+                        />
+                        <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-white bg-green-400"></span>
+                    </div>
+
+                    <div className={`w-full overflow-hidden transition-opacity duration-300 text-center ${isMinimized ? 'opacity-0 h-0 lg:opacity-100 lg:h-auto' : 'opacity-100 h-auto'}`}>
+                        <p className={`font-extrabold text-lg leading-snug text-gray-800 truncate ${isMinimized ? 'hidden' : 'block'}`} title={userProfile.name}>
                             {userProfile.name}
                         </p>
-                        <p className="text-sm text-gray-500 truncate" title={userProfile.email}>
+                        <p className={`text-xs text-blue-500 font-medium truncate mt-0.5 ${isMinimized ? 'hidden' : 'block'}`} title={userProfile.email}>
                             {userProfile.email}
                         </p>
                     </div>
@@ -33,9 +65,10 @@ const Sidebar: React.FC = () => {
 
             <button
                 onClick={signOut}
-                className="mt-auto bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition text-sm font-semibold"
+                className="mt-auto flex items-center justify-center bg-red-600 text-white py-3 px-4 rounded-xl hover:bg-red-700 transition duration-200 text-base font-bold shadow-lg transform hover:scale-[1.01]"
             >
-                Cerrar Sesión
+                <svg className={`w-5 h-5 ${!isMinimized ? 'mr-2' : 'mr-0'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                <span className={`${isMinimized ? 'hidden lg:inline' : 'inline'}`}>Cerrar Sesión</span>
             </button>
         </aside>
     );

@@ -1,5 +1,3 @@
-// src/components/DataTable.tsx
-
 import React, { useState } from "react";
 import type { SheetRow } from "../services/useGoogleSheetService";
 import ExpandableText from "./ExpandableText";
@@ -36,8 +34,6 @@ interface DocumentEditingState {
 }
 
 
-
-
 interface DataTableProps {
     rows: SheetRow[];
     expandedRow: number | null;
@@ -49,14 +45,22 @@ interface DataTableProps {
 }
 
 const DISPLAY_COLUMNS = [
-    { key: "fecha", label: "FECHA", width: "w-20" },
+    // CAMBIO CLAVE: Ocultar 'fecha' en móvil (hidden) y mostrar desde 'sm' (sm:table-cell).
+    { key: "fecha", label: "FECHA", width: "w-16 hidden sm:table-cell" }, 
     {
         key: "exp. mesa de partes / sec. gen.",
+        // CAMBIO CLAVE: Ocultar en móvil (hidden) y mostrar desde 'sm' (sm:table-cell).
         label: "EXP. MESA DE PARTES",
-        width: "w-32",
+        width: "w-32 hidden sm:table-cell",
     },
-    { key: "dependencia / usuario", label: "DEPENDENCIA / USUARIO", width: "min-w-64" },
-    { key: "asunto", label: "ASUNTO", width: "min-w-[400px] flex-1" },
+    { 
+        key: "dependencia / usuario", 
+        label: "DEPENDENCIA / USUARIO", 
+        // CAMBIO CLAVE: Ocultar en móvil (hidden) y mostrar desde 'md' (md:table-cell).
+        width: "min-w-64 hidden md:table-cell" 
+    },
+    // COLUMNA PRINCIPAL (ASUNTO): visible siempre, ocupa todo el espacio restante.
+    { key: "asunto", label: "ASUNTO", width: "min-w-[180px] flex-1" },
 ];
 
 const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, onAddDerivation, onEditDerivation, onDeleteDerivation, onEditCell }) => {
@@ -144,12 +148,14 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                             {DISPLAY_COLUMNS.map((col) => (
                                 <th
                                     key={col.key}
-                                    className={`px-6 py-3 text-left text-xs font-bold uppercase tracking-wider ${col.width}`}
+                                    // CAMBIO CLAVE: Usa col.width para ocultar las celdas de encabezado.
+                                    className={`px-3 py-3 text-left text-xs font-bold uppercase tracking-wider ${col.width}`}
                                 >
                                     {col.label}
                                 </th>
                             ))}
-                            <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider w-24">
+                            {/* Ajuste de ancho para la columna de acciones */}
+                            <th className="px-3 py-3 text-left text-xs font-bold uppercase tracking-wider w-24">
                                 Acciones
                             </th>
                         </tr>
@@ -172,24 +178,36 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                                         {DISPLAY_COLUMNS.map((col) => (
                                             <td
                                                 key={`${rowIndex}-${col.key}`}
-                                                className="px-6 py-4 text-sm dark:text-gray-300 align-top"
+                                                // Clase de padding reducida a px-3 para móvil
+                                                // CAMBIO CLAVE: Usa col.width para que las celdas del cuerpo se oculten.
+                                                className={`px-3 py-4 dark:text-gray-300 align-top ${col.width} whitespace-normal ${col.key === 'fecha' ? 'text-xs' : 'text-sm'}`}
                                             >
                                                 {col.key === "asunto" ? (
+                                                    // Ya usa ExpandableText para evitar el desborde
                                                     <ExpandableText text={row[col.key] || "N/A"} limit={250} />
                                                 ) : (
                                                     <div className="break-words font-medium">
+                                                        {/* Se mantiene el texto para las demás columnas (aunque estará oculto en móvil por la clase de arriba) */}
                                                         {row[col.key]}
                                                     </div>
                                                 )}
                                             </td>
                                         ))}
-                                        <td className="px-6 py-4">
-                                            <div className="flex flex-col gap-2">
+                                        <td className="px-3 py-4">
+                                            {/* Los botones de acción siempre se muestran */}
+                                            <div className="flex flex-col gap-1 md:gap-2 justify-start items-center">
                                                 <button
                                                     onClick={() => onToggleRow(rowIndex)}
-                                                    className="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition text-xs font-semibold"
+                                                    
+                                                    className="bg-blue-600 text-white px-2 py-1 rounded-lg hover:bg-blue-700 transition text-xs font-semibold whitespace-nowrap"
                                                 >
-                                                    {isExpanded ? "Ocultar" : "Ver Derivados"}
+                                                    
+                                                    <span className="sm:hidden">
+                                                        {isExpanded ? "➖" : "➕"}
+                                                    </span>
+                                                    <span className="hidden sm:inline">
+                                                        {isExpanded ? "Ocultar" : "Ver Derivados"}
+                                                    </span>
                                                 </button>
 
                                                 <button
@@ -204,9 +222,15 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                                                             },
                                                         })
                                                     }
-                                                    className="bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-600 transition text-xs font-semibold"
+                                                    className="bg-yellow-500 text-white px-2 py-1 rounded-lg hover:bg-yellow-600 transition text-xs font-semibold whitespace-nowrap"
                                                 >
-                                                    ✏️ Editar
+                                                    {/* Ícono visible solo en móvil, texto visible desde 'sm' */}
+                                                    <span className="sm:hidden">
+                                                        📝
+                                                    </span>
+                                                    <span className="hidden sm:inline">
+                                                        ✏️ Editar
+                                                    </span>
                                                 </button>
                                             </div>
 
@@ -215,7 +239,10 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
 
                                     {isExpanded && (
                                         <tr>
-                                            <td colSpan={DISPLAY_COLUMNS.length + 1} className="bg-gray-50 dark:bg-gray-800 px-6 py-6">
+                                            <td 
+                                                colSpan={DISPLAY_COLUMNS.length + 1} 
+                                                className="bg-gray-50 dark:bg-gray-800 px-6 py-6"
+                                            >
                                                 {derivations.length === 0 ? (
                                                     <p className="text-gray-600 dark:text-gray-400">No hay derivaciones registradas.</p>
                                                 ) : (
@@ -337,7 +364,7 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                 </button>
             </div>
             {docEditing && (
-                <div className="fixed inset-0 flex items-center justify-center  bg-opacity-50 z-50">
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-3xl w-full p-6 relative">
                         <button
                             onClick={() => setDocEditing(null)}
@@ -351,13 +378,14 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                             disabled={false}
                             onEditRow={async (updatedData) => {
                                 try {
-                                    for (const key in updatedData) {
-                                        await onEditCell(
+                                    const updatePromises = Object.keys(updatedData).map(key =>
+                                        onEditCell(
                                             docEditing.rowIndex,
                                             key,
                                             updatedData[key as keyof typeof updatedData]
-                                        );
-                                    }
+                                        )
+                                    );
+                                    await Promise.all(updatePromises);
                                     setDocEditing(null); 
                                 } catch (err) {
                                     console.error("Error al guardar cambios del documento:", err);

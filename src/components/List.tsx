@@ -1,3 +1,5 @@
+// src/components/List.tsx
+
 import React, { useEffect, useState } from "react";
 import type { SheetRow } from "../services/useGoogleSheetService";
 import { useSheetService } from "../services/GoogleSheetProvider";
@@ -59,24 +61,30 @@ const List: React.FC = () => {
 
     return (
         <div className="p-0">
-            <div className="flex justify-between items-center mb-6">
+            {/* Contenedor principal para la búsqueda y acciones */}
+            <div className="mb-6 space-y-4 sm:space-y-0">
+                {/* Campo de Búsqueda: ocupa todo el ancho en móvil */}
                 <input
                     type="text"
                     placeholder="Buscar por Asunto o Exp. Mesa de Partes..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="px-4 py-2 border rounded-lg w-1/2 text-sm dark:bg-gray-800 dark:text-gray-200"
+                    // w-full en móvil, sm:w-1/2 en desktop
+                    className="px-4 py-2 border rounded-lg w-full sm:w-1/2 text-sm dark:bg-gray-800 dark:text-gray-200"
                 />
-                <div className="flex gap-2">
+                
+                {/* Contenedor de Botones: se alinea a la derecha en desktop */}
+                <div className="flex gap-2 justify-end">
                     <button
                         onClick={listData}
                         className="bg-gray-700 text-white py-2 px-4 rounded-lg shadow-md hover:bg-gray-800 transition font-medium text-sm"
                     >
                         Recargar ({data.length} filas)
                     </button>
+                    {/* Ocultar en móviles (hidden sm:flex) */}
                     <button
                         onClick={() => setShowModal(true)}
-                        className="bg-green-600 text-white py-2 px-4 rounded-lg shadow-md hover:bg-green-700 transition font-medium text-sm"
+                        className="bg-green-600 text-white py-2 px-4 rounded-lg shadow-md hover:bg-green-700 transition font-medium text-sm hidden sm:flex"
                     >
                         ➕ Nuevo Documento
                     </button>
@@ -117,7 +125,7 @@ const List: React.FC = () => {
                         }
                         return deleteDerivation(originalIndex, key);
                     }}
-                    onEditCell={(reversedIndex, columnKey, newValue) => { // 👈 nuevo handler
+                    onEditCell={(reversedIndex, columnKey, newValue) => { 
                         const rowToUpdate = reversedData[reversedIndex];
                         const originalIndex = data.findIndex((r) => r === rowToUpdate);
 
@@ -131,7 +139,7 @@ const List: React.FC = () => {
             </div>
 
             {showModal && (
-                <div className="fixed inset-0 flex items-center justify-center  bg-opacity-50 z-50">
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                     <div className="bg-zinc-50 dark:bg-gray-800 rounded-xl shadow-xl max-w-3xl w-full p-6 relative">
                         <button
                             onClick={() => setShowModal(false)}
