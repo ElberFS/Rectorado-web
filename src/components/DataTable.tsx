@@ -46,18 +46,18 @@ interface DataTableProps {
 
 const DISPLAY_COLUMNS = [
     // CAMBIO CLAVE: Ocultar 'fecha' en móvil (hidden) y mostrar desde 'sm' (sm:table-cell).
-    { key: "fecha", label: "FECHA", width: "w-16 hidden sm:table-cell" }, 
+    { key: "fecha", label: "FECHA", width: "w-16 hidden sm:table-cell" },
     {
         key: "exp. mesa de partes / sec. gen.",
         // CAMBIO CLAVE: Ocultar en móvil (hidden) y mostrar desde 'sm' (sm:table-cell).
         label: "EXP. MESA DE PARTES",
         width: "w-32 hidden sm:table-cell",
     },
-    { 
-        key: "dependencia / usuario", 
-        label: "DEPENDENCIA / USUARIO", 
+    {
+        key: "dependencia / usuario",
+        label: "DEPENDENCIA / USUARIO",
         // CAMBIO CLAVE: Ocultar en móvil (hidden) y mostrar desde 'md' (md:table-cell).
-        width: "min-w-64 hidden md:table-cell" 
+        width: "min-w-64 hidden md:table-cell"
     },
     // COLUMNA PRINCIPAL (ASUNTO): visible siempre, ocupa todo el espacio restante.
     { key: "asunto", label: "ASUNTO", width: "min-w-[180px] flex-1" },
@@ -196,12 +196,25 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                                         <td className="px-3 py-4">
                                             {/* Los botones de acción siempre se muestran */}
                                             <div className="flex flex-col gap-1 md:gap-2 justify-start items-center">
+                                                {row["enlace documento"] ? (
+                                                    <a
+                                                        href={row["enlace documento"]}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="bg-green-600 text-white px-2 py-1 rounded-lg hover:bg-green-700 transition text-xs font-semibold whitespace-nowrap"
+                                                    >
+                                                        📄 Ver
+                                                    </a>
+                                                ) : (
+                                                    <span className="text-gray-400 italic text-xs">Sin enlace</span>
+                                                )}
+
                                                 <button
                                                     onClick={() => onToggleRow(rowIndex)}
-                                                    
+
                                                     className="bg-blue-600 text-white px-2 py-1 rounded-lg hover:bg-blue-700 transition text-xs font-semibold whitespace-nowrap"
                                                 >
-                                                    
+
                                                     <span className="sm:hidden">
                                                         {isExpanded ? "➖" : "➕"}
                                                     </span>
@@ -239,8 +252,8 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
 
                                     {isExpanded && (
                                         <tr>
-                                            <td 
-                                                colSpan={DISPLAY_COLUMNS.length + 1} 
+                                            <td
+                                                colSpan={DISPLAY_COLUMNS.length + 1}
                                                 className="bg-gray-50 dark:bg-gray-800 px-6 py-6"
                                             >
                                                 {derivations.length === 0 ? (
@@ -386,7 +399,7 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                                         )
                                     );
                                     await Promise.all(updatePromises);
-                                    setDocEditing(null); 
+                                    setDocEditing(null);
                                 } catch (err) {
                                     console.error("Error al guardar cambios del documento:", err);
                                     alert("Error al guardar cambios.");
