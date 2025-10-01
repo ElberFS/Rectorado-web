@@ -10,16 +10,15 @@ const Login: React.FC = () => {
 
     return (
         <div 
-            className="flex items-center justify-center min-h-screen bg-cover bg-center p-4 relative" // Añadido 'relative' para el overlay
+            className="flex items-center justify-center min-h-screen bg-cover bg-center p-4 relative" 
             style={{ 
                 backgroundImage: 'url(/Background.png)',
                 backgroundAttachment: 'fixed'
             }}
         >
-            {/* Overlay oscuro sobre la imagen de fondo */}
-            <div className="absolute inset-0 bg-black opacity-40"></div> {/* Fondo más oscuro */}
+            <div className="absolute inset-0 bg-black opacity-40"></div> 
 
-            <div className="relative z-10 p-10 max-w-md w-full bg-white bg-opacity-80 shadow-2xl rounded-xl text-center backdrop-blur-sm"> {/* Opacidad del 80% */}
+            <div className="relative z-10 p-10 max-w-md w-full bg-white bg-opacity-80 shadow-2xl rounded-xl text-center backdrop-blur-sm"> 
                 
                 <img 
                     src="/LogoColor.png"

@@ -22,7 +22,7 @@ const AddDerivation: React.FC<AddDerivationProps> = ({ onAdd, disabled = false }
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 placeholder="Nueva derivación..."
-                className={`flex-1 px-3 py-2 border rounded-lg text-sm dark:bg-gray-800 dark:text-gray-200 ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+                className={`flex-1 px-3 py-2 border rounded-lg text-sm  ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
                 disabled={disabled}
             />
             <button

@@ -28,7 +28,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             )}
             
             <main 
-                className={`flex-1 bg-gray-100 dark:bg-gray-800 overflow-y-auto transition-all duration-300 ${mainMarginClass}`}
+                className={`flex-1 bg-gray-100  overflow-y-auto transition-all duration-300 ${mainMarginClass}`}
             >
                 <button
                     onClick={toggleSidebar}

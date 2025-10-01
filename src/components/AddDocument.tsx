@@ -58,12 +58,7 @@ const AddDocument: React.FC<AddDocumentProps> = ({ onAddRow,  disabled, onSucces
 
         setIsSaving(true);
         try {
-            // 1) Guardar fila en Sheets
             await onAddRow(formData, selectedFile || undefined);
-
-            
-
-            // Resetear form y archivo
             setFormData(initialFormData); 
             setSelectedFile(null); 
             if (fileInputRef.current) {

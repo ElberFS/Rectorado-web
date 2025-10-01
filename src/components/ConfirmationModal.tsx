@@ -40,22 +40,22 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     return (
         <div className={`fixed inset-0  z-50 flex items-center justify-center p-4 transition-opacity duration-300 ${overlayClass} bg-opacity-50`}>
             <div 
-                className={`bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-sm p-6 transform transition-all duration-300 ${modalClass}`}
+                className={`bg-white  rounded-xl shadow-2xl w-full max-w-sm p-6 transform transition-all duration-300 ${modalClass}`}
                 onClick={(e) => e.stopPropagation()} 
             >
                 
-                <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-4 border-b pb-2">
+                <h3 className="text-xl font-bold text-red-600 mb-4 border-b pb-2">
                     {title}
                 </h3>
                 
-                <p className="text-gray-700 dark:text-gray-300 mb-6">
+                <p className="text-gray-700  mb-6">
                     {message}
                 </p>
 
                 <div className="flex justify-end space-x-3">
                     <button
                         onClick={onCancel}
-                        className="px-4 py-2 text-sm font-semibold rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                        className="px-4 py-2 text-sm font-semibold rounded-lg border border-gray-300  hover:bg-gray-100  transition"
                     >
                         Cancelar
                     </button>

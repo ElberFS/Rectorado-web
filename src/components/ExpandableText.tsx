@@ -10,7 +10,7 @@ const ExpandableText: React.FC<ExpandableTextProps> = ({ text, limit = 250 }) =>
     const [isExpanded, setIsExpanded] = useState(false);
 
     if (!text || text.length <= limit) {
-        return <span className="text-gray-800 dark:text-gray-300 break-words align-middle">{text}</span>;
+        return <span className="text-gray-800  break-words align-middle">{text}</span>;
     }
 
     const truncatedText = text.substring(0, limit).trim() + (text.length > limit ? '...' : '');
@@ -18,7 +18,7 @@ const ExpandableText: React.FC<ExpandableTextProps> = ({ text, limit = 250 }) =>
 
     return (
         <div className="flex flex-col">
-            <span className={`text-gray-800 dark:text-gray-300 text-sm break-words`}>
+            <span className={`text-gray-800  text-sm break-words`}>
                 {displayText}
             </span>
 

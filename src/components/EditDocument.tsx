@@ -60,13 +60,13 @@ const EditDocument: React.FC<EditDocumentProps> = ({ initialData, onEditRow, dis
 
     return (
         <form onSubmit={handleSubmit}>
-            <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-3">
+            <h2 className="text-2xl font-bold mb-6 text-gray-900  border-b border-gray-200  pb-3">
                 ✏️ Editar Documento
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-8">
                 <div>
-                    <label htmlFor="fecha" className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
+                    <label htmlFor="fecha" className="block text-xs font-semibold text-gray-500  uppercase mb-1">
                         FECHA
                     </label>
                     <input
@@ -76,13 +76,13 @@ const EditDocument: React.FC<EditDocumentProps> = ({ initialData, onEditRow, dis
                         value={formData.fecha}
                         onChange={handleChange}
                         disabled={isOperationDisabled}
-                        className="w-full p-2.5 text-sm border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white transition focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full p-2.5 text-sm border border-gray-300 rounded-lg  transition focus:ring-blue-500 focus:border-blue-500"
                     />
 
                 </div>
 
                 <div>
-                    <label htmlFor="exp" className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
+                    <label htmlFor="exp" className="block text-xs font-semibold text-gray-500  uppercase mb-1">
                         EXP. MESA DE PARTES
                     </label>
                     <input
@@ -92,12 +92,12 @@ const EditDocument: React.FC<EditDocumentProps> = ({ initialData, onEditRow, dis
                         value={formData['exp. mesa de partes / sec. gen.']}
                         onChange={handleChange}
                         disabled={isOperationDisabled}
-                        className="w-full p-2.5 text-sm border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white transition focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full p-2.5 text-sm border border-gray-300 rounded-lg  transition focus:ring-blue-500 focus:border-blue-500"
                     />
                 </div>
 
                 <div className="md:col-span-2">
-                    <label htmlFor="dependencia" className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
+                    <label htmlFor="dependencia" className="block text-xs font-semibold text-gray-500  uppercase mb-1">
                         DEPENDENCIA / USUARIO
                     </label>
                     <input
@@ -107,12 +107,12 @@ const EditDocument: React.FC<EditDocumentProps> = ({ initialData, onEditRow, dis
                         value={formData['dependencia / usuario']}
                         onChange={handleChange}
                         disabled={isOperationDisabled}
-                        className="w-full p-2.5 text-sm border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white transition focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full p-2.5 text-sm border border-gray-300 rounded-lg  transition focus:ring-blue-500 focus:border-blue-500"
                     />
                 </div>
 
                 <div className="md:col-span-2">
-                    <label htmlFor="asunto" className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
+                    <label htmlFor="asunto" className="block text-xs font-semibold text-gray-500  uppercase mb-1">
                         ASUNTO
                     </label>
                     <textarea
@@ -122,7 +122,7 @@ const EditDocument: React.FC<EditDocumentProps> = ({ initialData, onEditRow, dis
                         onChange={handleChange}
                         rows={3}
                         disabled={isOperationDisabled}
-                        className="w-full p-2.5 text-sm border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-none transition focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full p-2.5 text-sm border border-gray-300 rounded-lg  resize-none transition focus:ring-blue-500 focus:border-blue-500"
                     />
                 </div>
             </div>

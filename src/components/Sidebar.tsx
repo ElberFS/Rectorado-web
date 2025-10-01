@@ -24,7 +24,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     return (
         <aside className={sidebarClasses}>
             
-            {/* Logo y Título */}
             <div className="flex items-center mb-10 overflow-hidden">
                 <img 
                     src="/LogoColor.png" 
@@ -36,7 +35,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                 </h2>
             </div>
             
-            {/* Perfil de Usuario */}
             {userProfile && (
                 <div className={`flex flex-col items-center border-b border-gray-100 pb-5 mb-8 transition-all duration-300 ${isMinimized ? 'items-center' : 'items-start'}`}>
                     

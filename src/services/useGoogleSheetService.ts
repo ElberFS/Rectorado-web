@@ -63,21 +63,20 @@ export const useGoogleSheetService = () => {
         setIsSignedIn(true);
         setError(null);
 
-        if (window.google?.accounts?.oauth2) {
-            window.google.accounts.oauth2.userinfo({
-                success: (info: any) => {
-                    setUserProfile({
-                        name: info.name,
-                        email: info.email,
-                        imageUrl: info.picture,
-                    });
-                },
-                error: () => {
-                    setUserProfile(null);
-                },
+        gapi.client.request({
+            path: "https://www.googleapis.com/oauth2/v3/userinfo"
+        }).then((response: any) => {
+            const info = response.result;
+            setUserProfile({
+                name: info.name,
+                email: info.email,
+                imageUrl: info.picture,
             });
-        }
+        }).catch(() => {
+            setUserProfile(null);
+        });
     }, []);
+
 
     const initClient = useCallback(() => {
         if (isGapiInitialized) return;
@@ -278,7 +277,7 @@ export const useGoogleSheetService = () => {
                 for (let i = headers.length - 1; i >= 0; i--) {
                     const header = String(headers[i] || "").toLowerCase().trim();
                     if (header.includes("derivado")) {
-                        targetColIndex = i; // Sobrescribirá la última
+                        targetColIndex = i;
                         break;
                     }
                 }
@@ -408,7 +407,7 @@ export const useGoogleSheetService = () => {
             throw new Error("Debes iniciar sesión para editar.");
         }
         try {
-            const sheetRowNumber = rowIndex + 2; // +2 porque headers están en fila 1
+            const sheetRowNumber = rowIndex + 2;
 
             const headerResponse = await gapi.client.sheets.spreadsheets.values.get({
                 spreadsheetId: SPREADSHEET_ID,
@@ -494,9 +493,8 @@ export const useGoogleSheetService = () => {
             const fileId = result.id;
             const fileLink = `https://drive.google.com/file/d/${fileId}/view?usp=sharing`;
 
-            // ⚡ Si paso rowIndex, actualizo la celda en la columna "enlace documento"
             if (rowIndex !== undefined) {
-                await editCell(rowIndex, "enlace documento", fileLink); 
+                await editCell(rowIndex, "enlace documento", fileLink);
             }
 
             return { fileId, fileLink };

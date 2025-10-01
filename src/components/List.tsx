@@ -22,7 +22,7 @@ const List: React.FC = () => {
 
     if (error) {
         return (
-            <div className="p-8 max-w-4xl mx-auto bg-gray-100 dark:bg-gray-800 rounded-lg shadow-xl">
+            <div className="p-8 max-w-4xl mx-auto bg-gray-100  rounded-lg shadow-xl">
                 <div className="p-4 mb-4 text-sm text-red-800 bg-red-100 rounded-lg">
                     Error al cargar datos: {error}
                 </div>
@@ -38,7 +38,7 @@ const List: React.FC = () => {
 
     if (data.length === 0) {
         return (
-            <div className="text-center p-10 text-blue-600 dark:text-blue-400">
+            <div className="text-center p-10 text-blue-600 ">
                 Cargando datos...
             </div>
         );
@@ -56,10 +56,8 @@ const List: React.FC = () => {
     const reversedData = [...filteredData].reverse();
 
     const handleAddDocument = async (newDoc: NewDocumentData, file?: File) => {
-        // 1. Crear fila en Sheets
         await addRow(newDoc);
         await listData();
-        // 2. Si hay archivo, subirlo (sin índice)
         if (file) {
             const newRowIndex = data.length; 
             await uploadFileToDrive(file, newRowIndex);
@@ -73,19 +71,15 @@ const List: React.FC = () => {
 
     return (
         <div className="p-0">
-            {/* Contenedor principal para la búsqueda y acciones */}
             <div className="mb-6 space-y-4 sm:space-y-0">
-                {/* Campo de Búsqueda: ocupa todo el ancho en móvil */}
                 <input
                     type="text"
                     placeholder="Buscar por Asunto o Exp. Mesa de Partes..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    // w-full en móvil, sm:w-1/2 en desktop
-                    className="px-4 py-2 border rounded-lg w-full sm:w-1/2 text-sm dark:bg-gray-800 dark:text-gray-200"
+                    className="px-4 py-2 border rounded-lg w-full sm:w-1/2 text-sm "
                 />
 
-                {/* Contenedor de Botones: se alinea a la derecha en desktop */}
                 <div className="flex gap-2 justify-end">
                     <button
                         onClick={listData}
@@ -93,7 +87,6 @@ const List: React.FC = () => {
                     >
                         Recargar ({data.length} filas)
                     </button>
-                    {/* Ocultar en móviles (hidden sm:flex) */}
                     <button
                         onClick={() => setShowModal(true)}
                         className="bg-green-600 text-white py-2 px-4 rounded-lg shadow-md hover:bg-green-700 transition font-medium text-sm hidden sm:flex"
@@ -103,7 +96,7 @@ const List: React.FC = () => {
                 </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl p-0">
+            <div className="bg-white  rounded-xl shadow-2xl p-0">
                 <DataTable
                     rows={reversedData}
                     expandedRow={expandedRow}
@@ -152,10 +145,10 @@ const List: React.FC = () => {
 
             {showModal && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="bg-zinc-50 dark:bg-gray-800 rounded-xl shadow-xl max-w-3xl w-full p-6 relative">
+                    <div className="bg-zinc-50  rounded-xl shadow-xl max-w-3xl w-full p-6 relative">
                         <button
                             onClick={() => setShowModal(false)}
-                            className="absolute top-3 right-3 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+                            className="absolute top-3 right-3 text-gray-600 hover:text-gray-900 "
                         >
                             ✖
                         </button>
