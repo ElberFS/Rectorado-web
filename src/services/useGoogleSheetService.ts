@@ -17,9 +17,11 @@ export interface SheetRow {
 }
 
 const CLIENT_ID = "486408468099-hlh1danal1m7qogpnltti3efgajp08h0.apps.googleusercontent.com";
+const FOLDER_ID = "1SRESamB-3R1KnteO_jdWCQXMSxAul4to";
 const SPREADSHEET_ID = "13cfiJZysi_PrDWHBI-MaJMcfUHe4U6pDxdDz3PyuCmA";
 const SHEET_NAME = "Hoja1";
-const SCOPES = "https://www.googleapis.com/auth/spreadsheets";
+const SCOPES =
+    "https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/drive.file";
 const DISCOVERY_DOC = "https://sheets.googleapis.com/$discovery/rest?version=v4";
 
 let tokenClient: any = null;
@@ -456,22 +458,72 @@ export const useGoogleSheetService = () => {
         }
     }, [isSignedIn, listData]);
 
+    const uploadFileToDrive = useCallback(async (file: File, rowIndex?: number) => {
+        if (!isSignedIn) {
+            throw new Error("Debes iniciar sesión para subir archivos.");
+        }
+
+        try {
+            const metadata = {
+                name: file.name,
+                mimeType: file.type || "application/pdf",
+                parents: [FOLDER_ID],
+            };
+
+            const form = new FormData();
+            form.append(
+                "metadata",
+                new Blob([JSON.stringify(metadata)], { type: "application/json" })
+            );
+            form.append("file", file);
+
+            const token = gapi.client.getToken().access_token;
+
+            const response = await fetch(
+                "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+                {
+                    method: "POST",
+                    headers: new Headers({ Authorization: `Bearer ${token}` }),
+                    body: form,
+                }
+            );
+
+            const result = await response.json();
+            console.log("Archivo subido a Drive:", result);
+
+            const fileId = result.id;
+            const fileLink = `https://drive.google.com/file/d/${fileId}/view?usp=sharing`;
+
+            // ⚡ Si paso rowIndex, actualizo la celda en la columna "enlace documento"
+            if (rowIndex !== undefined) {
+                await editCell(rowIndex, "enlace documento", fileLink); 
+            }
+
+            return { fileId, fileLink };
+        } catch (err: any) {
+            console.error("Error al subir archivo a Drive:", err);
+            throw err;
+        }
+    }, [isSignedIn, editCell]);
+
+
+
 
     return {
-    initClient,
-    signIn,
-    signOut,
-    isSignedIn,
-    data,
-    error,
-    listData,
-    userProfile,
-    addRow,
-    addDerivationToRow,
-    editDerivation,
-    deleteDerivation,
-    editCell, 
+        initClient,
+        signIn,
+        signOut,
+        isSignedIn,
+        data,
+        error,
+        listData,
+        userProfile,
+        addRow,
+        addDerivationToRow,
+        editDerivation,
+        deleteDerivation,
+        editCell,
+        uploadFileToDrive,
     };
-
 
 };

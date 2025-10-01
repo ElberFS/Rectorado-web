@@ -1,6 +1,5 @@
 // src/components/AddDocument.tsx
-
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 
 export interface NewDocumentData {
     fecha: string;
@@ -10,7 +9,7 @@ export interface NewDocumentData {
 }
 
 interface AddDocumentProps {
-    onAddRow: (data: NewDocumentData) => Promise<void>;
+    onAddRow: (data: NewDocumentData, file?: File) => Promise<void>; 
     disabled: boolean;
     onSuccess?: () => void; 
 }
@@ -22,9 +21,11 @@ const initialFormData: NewDocumentData = {
     asunto: '',
 };
 
-const AddDocument: React.FC<AddDocumentProps> = ({ onAddRow, disabled, onSuccess }) => {
+const AddDocument: React.FC<AddDocumentProps> = ({ onAddRow,  disabled, onSuccess }) => {
     const [formData, setFormData] = useState<NewDocumentData>(initialFormData);
     const [isSaving, setIsSaving] = useState(false);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null); 
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -32,6 +33,12 @@ const AddDocument: React.FC<AddDocumentProps> = ({ onAddRow, disabled, onSuccess
             ...prev,
             [name]: value,
         }));
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            setSelectedFile(e.target.files[0]);
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -51,11 +58,21 @@ const AddDocument: React.FC<AddDocumentProps> = ({ onAddRow, disabled, onSuccess
 
         setIsSaving(true);
         try {
-            await onAddRow(formData);
+            // 1) Guardar fila en Sheets
+            await onAddRow(formData, selectedFile || undefined);
+
+            
+
+            // Resetear form y archivo
             setFormData(initialFormData); 
+            setSelectedFile(null); 
+            if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
+
             onSuccess?.(); 
         } catch (error) {
-            console.error("Error al añadir la fila:", error);
+            console.error("Error al guardar documento:", error);
             alert("Error al guardar el nuevo documento. Inténtalo de nuevo.");
         } finally {
             setIsSaving(false);
@@ -134,6 +151,22 @@ const AddDocument: React.FC<AddDocumentProps> = ({ onAddRow, disabled, onSuccess
                         className="w-full p-2.5 text-sm border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-none transition focus:ring-blue-500 focus:border-blue-500"
                     />
                 </div>
+
+                {/* 👇 Nuevo campo para PDF */}
+                <div className="md:col-span-2">
+                    <label htmlFor="file" className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
+                        ARCHIVO PDF (opcional)
+                    </label>
+                    <input
+                        type="file"
+                        id="file"
+                        accept="application/pdf"
+                        ref={fileInputRef} // 👈 referencia para reset
+                        onChange={handleFileChange}
+                        disabled={isOperationDisabled}
+                        className="w-full text-sm text-gray-700 dark:text-gray-300"
+                    />
+                </div>
             </div>
 
             <button
@@ -145,7 +178,7 @@ const AddDocument: React.FC<AddDocumentProps> = ({ onAddRow, disabled, onSuccess
                         : 'bg-green-600 hover:bg-green-700'
                 }`}
             >
-                {isSaving ? 'Guardando fila... ⏳' : 'Añadir Nuevo Trámite'}
+                {isSaving ? 'Guardando... ⏳' : 'Añadir Nuevo Trámite'}
             </button>
             
         </form>

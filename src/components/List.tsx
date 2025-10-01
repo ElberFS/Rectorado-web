@@ -7,8 +7,11 @@ import DataTable from "./DataTable";
 import AddDocument from "./AddDocument";
 import type { NewDocumentData } from "./AddDocument";
 
+
+
+
 const List: React.FC = () => {
-    const { data, error, listData, addRow, addDerivationToRow, editDerivation, deleteDerivation, editCell } = useSheetService();
+    const { data, error, listData, addRow, addDerivationToRow, editDerivation, deleteDerivation, editCell, uploadFileToDrive, } = useSheetService();
     const [expandedRow, setExpandedRow] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [showModal, setShowModal] = useState(false);
@@ -52,12 +55,21 @@ const List: React.FC = () => {
 
     const reversedData = [...filteredData].reverse();
 
-    const handleAddDocument = async (newDoc: NewDocumentData) => {
-        
+    const handleAddDocument = async (newDoc: NewDocumentData, file?: File) => {
+        // 1. Crear fila en Sheets
         await addRow(newDoc);
-        await listData(); 
+        await listData();
+        // 2. Si hay archivo, subirlo (sin índice)
+        if (file) {
+            const newRowIndex = data.length; 
+            await uploadFileToDrive(file, newRowIndex);
+            await listData();
+        }
         setShowModal(false);
     };
+
+
+
 
     return (
         <div className="p-0">
@@ -72,7 +84,7 @@ const List: React.FC = () => {
                     // w-full en móvil, sm:w-1/2 en desktop
                     className="px-4 py-2 border rounded-lg w-full sm:w-1/2 text-sm dark:bg-gray-800 dark:text-gray-200"
                 />
-                
+
                 {/* Contenedor de Botones: se alinea a la derecha en desktop */}
                 <div className="flex gap-2 justify-end">
                     <button
@@ -125,7 +137,7 @@ const List: React.FC = () => {
                         }
                         return deleteDerivation(originalIndex, key);
                     }}
-                    onEditCell={(reversedIndex, columnKey, newValue) => { 
+                    onEditCell={(reversedIndex, columnKey, newValue) => {
                         const rowToUpdate = reversedData[reversedIndex];
                         const originalIndex = data.findIndex((r) => r === rowToUpdate);
 
@@ -150,6 +162,7 @@ const List: React.FC = () => {
                         <AddDocument
                             onAddRow={handleAddDocument}
                             disabled={false}
+
                         />
                     </div>
                 </div>
