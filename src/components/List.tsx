@@ -144,7 +144,7 @@ const List: React.FC = () => {
             </div>
 
             {showModal && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                <div className="fixed inset-0 flex items-center justify-center  bg-opacity-50 z-50">
                     <div className="bg-zinc-50  rounded-xl shadow-xl max-w-3xl w-full p-6 relative">
                         <button
                             onClick={() => setShowModal(false)}

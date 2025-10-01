@@ -38,14 +38,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
             {userProfile && (
                 <div className={`flex flex-col items-center border-b border-gray-100 pb-5 mb-8 transition-all duration-300 ${isMinimized ? 'items-center' : 'items-start'}`}>
                     
-                    <div className="relative mb-3">
-                        <img
-                            src={userProfile.imageUrl || "/LogoColor.png"} 
-                            alt="User Avatar"
-                            className="w-12 h-12 rounded-full object-cover border-4 border-blue-500 shadow-md"
-                        />
-                        <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-white bg-green-400"></span>
-                    </div>
+                    
 
                     <div className={`w-full overflow-hidden transition-opacity duration-300 text-center ${isMinimized ? 'opacity-0 h-0 lg:opacity-100 lg:h-auto' : 'opacity-100 h-auto'}`}>
                         <p className={`font-extrabold text-lg leading-snug text-gray-800 truncate ${isMinimized ? 'hidden' : 'block'}`} title={userProfile.name}>
