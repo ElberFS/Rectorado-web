@@ -1,41 +1,25 @@
+// useGoogleSheetService.ts
+
 import { useState, useCallback } from "react";
 import { gapi } from "gapi-script";
-
+import {
+    CLIENT_ID,
+    FOLDER_ID,
+    SPREADSHEET_ID,
+    SHEET_NAME,
+    SCOPES,
+    DISCOVERY_DOC,
+    colIndexToLetter,
+} from "./config"; 
+import type { SheetRow } from "./config"; 
 declare global {
     interface Window {
         google: any;
     }
 }
 
-export interface SheetRow {
-    "fecha": string;
-    "exp. mesa de partes / sec. gen.": string;
-    "dependencia / usuario": string;
-    "asunto": string;
-    "derivado a / fecha": string;
-    [key: string]: any;
-}
-
-const CLIENT_ID = "486408468099-hlh1danal1m7qogpnltti3efgajp08h0.apps.googleusercontent.com";
-const FOLDER_ID = "1SRESamB-3R1KnteO_jdWCQXMSxAul4to";
-const SPREADSHEET_ID = "13cfiJZysi_PrDWHBI-MaJMcfUHe4U6pDxdDz3PyuCmA";
-const SHEET_NAME = "Hoja1";
-const SCOPES =
-    "https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/drive.file";
-const DISCOVERY_DOC = "https://sheets.googleapis.com/$discovery/rest?version=v4";
-
 let tokenClient: any = null;
-
-
-const colIndexToLetter = (index: number): string => {
-    const startCode = 'A'.charCodeAt(0);
-    let letter = '';
-    while (index >= 0) {
-        letter = String.fromCharCode(startCode + (index % 26)) + letter;
-        index = Math.floor(index / 26) - 1;
-    }
-    return letter;
-};
+export type { SheetRow };
 
 
 export const useGoogleSheetService = () => {
@@ -92,7 +76,7 @@ export const useGoogleSheetService = () => {
                     if (window.google && window.google.accounts) {
                         tokenClient = window.google.accounts.oauth2.initTokenClient({
                             client_id: CLIENT_ID,
-                            scope: SCOPES + " https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
+                            scope: SCOPES, // SCOPES ya incluye los de userinfo.profile y userinfo.email
                             callback: handleTokenResponse,
                         });
                     } else {
@@ -232,7 +216,6 @@ export const useGoogleSheetService = () => {
             });
 
             await listData();
-            setError(null);
         } catch (err: any) {
             console.error("Error al añadir fila:", err);
             setError(err?.message || "Fallo al añadir la fila.");
