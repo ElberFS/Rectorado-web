@@ -86,7 +86,6 @@ const CalendarList: React.FC = () => {
     const month = currentNavDate.getMonth();
     const firstDayOfMonth = new Date(year, month, 1);
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const monthName = firstDayOfMonth.toLocaleDateString("es-ES", { month: "long" });
     const firstDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7;
 
     const changeDate = (delta: number) => {
