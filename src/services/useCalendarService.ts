@@ -14,7 +14,7 @@ export const useCalendarService = () => {
     const [calendarData, setCalendarData] = useState<CalendarRow[]>([]);
     const [calendarError, setCalendarError] = useState<string | null>(null);
 
-    const CALENDAR_HEADERS = ["fecha inicio", "fecha fin", "nombre", "descripcion", "lugar", "estado"];
+    const CALENDAR_HEADERS = ["fecha inicio", "fecha fin", "nombre", "descripcion", "lugar", "estado", "días repetición"];
 
 
     const listCalendarEvents = useCallback(async (): Promise<CalendarRow[]> => {
@@ -42,8 +42,14 @@ export const useCalendarService = () => {
             const rows = values.slice(1).map((row: any[], rowIndex: number) => {
                 const rowObject: Partial<CalendarRow> = {};
                 headers.forEach((header: string, index: number) => {
-                    (rowObject as any)[header] = String(row[index] || "").trim();
+                    const value = String(row[index] || "").trim();
+                    if (header === "días repetición") {
+                        (rowObject as any)[header] = value ? value.split(",").map(v => v.trim()) : [];
+                    } else {
+                        (rowObject as any)[header] = value;
+                    }
                 });
+
 
                 (rowObject as any).sheetRowNumber = rowIndex + 2;
                 return rowObject as CalendarRow;
@@ -69,9 +75,13 @@ export const useCalendarService = () => {
 
 
             const rowArray = CALENDAR_HEADERS.map(header => {
-                const value = (newEvent as any)[header] ?? "";
+                const value = (newEvent as any)[header];
+                if (header === "días repetición" && Array.isArray(value)) {
+                    return value.join(", "); // Guarda como "Lunes, Miércoles, Viernes"
+                }
                 return String(value ?? "").trim();
             });
+
 
             const resource = { values: [rowArray] };
 
@@ -156,10 +166,10 @@ export const useCalendarService = () => {
                         {
                             deleteDimension: {
                                 range: {
-                                    sheetId: sheetId, 
+                                    sheetId: sheetId,
                                     dimension: "ROWS",
                                     startIndex: sheetRowNumber - 1,
-                                    endIndex: sheetRowNumber, 
+                                    endIndex: sheetRowNumber,
                                 },
                             },
                         },

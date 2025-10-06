@@ -29,6 +29,7 @@ export interface CalendarRow {
     "descripcion": string; 
     "lugar": string;       
     "estado": string;       
+    "días repetición"?: string;  
     [key: string]: any;     
 }
 
