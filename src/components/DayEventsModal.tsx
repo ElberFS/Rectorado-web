@@ -22,7 +22,9 @@ const DayEventsModal: React.FC<DayEventsModalProps> = ({
 }) => {
     if (!isOpen || !selectedDate) return null;
 
-    const selectedDay = new Date(selectedDate);
+    const [y, m, d] = selectedDate.split("-").map(Number);
+    const selectedDay = new Date(y, m - 1, d);
+
     const formattedDate = selectedDay.toLocaleDateString("es-ES", {
         weekday: "long",
         day: "numeric",

@@ -33,7 +33,9 @@ const getColorByEstado = (estado?: string) => {
 
 type ViewMode = "Mes" | "Semana" | "Día";
 
-const formatDate = (d: Date) => d.toISOString().split("T")[0];
+const formatDate = (d: Date) =>
+`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
 
 const mapRawToEvent = (raw: RawCalendarRow): CalendarEvent => {
     return {
@@ -58,6 +60,7 @@ const CalendarList: React.FC = () => {
     } = useCalendarService();
 
     const today = new Date();
+    
     const [currentNavDate, setCurrentNavDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
 
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -156,35 +159,28 @@ const CalendarList: React.FC = () => {
 
 
     const getEventsForDay = (date: string) => {
-        // Asegura que la fecha que se está consultando se interprete como medianoche LOCAL.
-        const current = new Date(`${date}T00:00:00`);
-        const currentDay = new Date(current.setHours(0, 0, 0, 0)); // Medianoche local del día consultado
+        const [year, month, day] = date.split("-").map(Number);
+        const current = new Date(year, month - 1, day);
+        const currentDay = new Date(current.setHours(0, 0, 0, 0));
 
         return events.filter((event) => {
-            
-            // Fuerza la interpretación de la fecha de inicio del evento como medianoche LOCAL.
-            const start = event.fechaInicio ? new Date(`${event.fechaInicio}T00:00:00`) : null;
-            
-            // La fecha de fin se mantiene para consistencia en el objeto event, pero no se usa para el filtro visual.
-            // const end = event.fechaFin ? new Date(`${event.fechaFin}T00:00:00`) : start; 
-            if (!start) return false;
+            if (!event.fechaInicio) return false;
 
-            const startDay = new Date(start.setHours(0, 0, 0, 0)); // Medianoche local del inicio del evento
+            // 🔹 Crear la fecha de inicio del evento con hora local
+            const [y, m, d] = event.fechaInicio.split("-").map(Number);
+            const start = new Date(y, m - 1, d);
+            const startDay = new Date(start.setHours(0, 0, 0, 0));
 
-            // MODIFICACIÓN CLAVE: El evento solo es visible si la fecha consultada (currentDay)
-            // es EXACTAMENTE igual a la fecha de inicio del evento (startDay).
             const isStartDay = currentDay.getTime() === startDay.getTime();
-
             return isStartDay;
         });
     };
 
+
     const getWeekDays = () => {
         const start = currentNavDate;
-        // Obtenemos el día de la semana (0=Domingo, 6=Sábado). Lo ajustamos para que 1=Lunes.
-        const day = (start.getDay() + 6) % 7; 
-        // Calculamos la diferencia para llegar al Lunes (día 0 en nuestro ajuste)
-        const diff = start.getDate() - day; 
+        const day = (start.getDay() + 6) % 7;
+        const diff = start.getDate() - day;
         const startOfWeek = new Date(start);
         startOfWeek.setDate(diff);
         startOfWeek.setHours(0, 0, 0, 0);
@@ -200,10 +196,10 @@ const CalendarList: React.FC = () => {
 
     const renderDayView = () => {
         // Asegura que la fecha seleccionada se interprete como medianoche local
-        const dateToRender = selectedDate 
-            ? new Date(`${selectedDate}T00:00:00`) 
+        const dateToRender = selectedDate
+            ? new Date(`${selectedDate}T00:00:00`)
             : currentNavDate;
-            
+
         const dateStr = formatDate(dateToRender);
         const dayEvents = getEventsForDay(dateStr);
         const dayName = dateToRender.toLocaleDateString("es-ES", { weekday: "long" });
@@ -337,7 +333,7 @@ const CalendarList: React.FC = () => {
 
     const renderNavigationText = () => {
         const date = currentNavDate;
-        
+
         // Muestra siempre el Mes y el Año, independientemente de la vista (Mes, Semana, Día)
         return `${date.toLocaleDateString("es-ES", { month: "long" })}, ${date.getFullYear()}`;
     }
