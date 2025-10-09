@@ -34,7 +34,9 @@ const DayEventsModal: React.FC<DayEventsModalProps> = ({
 
     const eventsForDay = events.filter((ev) => {
         if (!ev.fechaInicio) return false;
-        const eventDate = new Date(ev.fechaInicio);
+        const [yy, mm, dd] = ev.fechaInicio.split("-").map(Number);
+        const eventDate = new Date(yy, mm - 1, dd);
+
         return (
             eventDate.getFullYear() === selectedDay.getFullYear() &&
             eventDate.getMonth() === selectedDay.getMonth() &&
