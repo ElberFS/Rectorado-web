@@ -52,7 +52,7 @@ export const useCalendarService = () => {
             setCalendarData(rows);
 
             const expandedEvents: CalendarRow[] = [];
-            rows.forEach(event => {
+            rows.forEach((event: CalendarRow) => {
                 const expanded = expandCalendarEvent(event);
                 expandedEvents.push(...expanded);
             });
