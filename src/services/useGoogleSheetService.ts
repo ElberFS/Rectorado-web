@@ -10,8 +10,8 @@ import {
     SCOPES,
     DISCOVERY_DOC,
     colIndexToLetter,
-} from "./config"; 
-import type { SheetRow } from "./config"; 
+} from "./config";
+import type { SheetRow } from "./config";
 declare global {
     interface Window {
         google: any;
@@ -20,7 +20,6 @@ declare global {
 
 let tokenClient: any = null;
 export type { SheetRow };
-
 
 export const useGoogleSheetService = () => {
     const [isSignedIn, setIsSignedIn] = useState(false);
@@ -61,7 +60,6 @@ export const useGoogleSheetService = () => {
         });
     }, []);
 
-
     const initClient = useCallback(() => {
         if (isGapiInitialized) return;
 
@@ -76,7 +74,7 @@ export const useGoogleSheetService = () => {
                     if (window.google && window.google.accounts) {
                         tokenClient = window.google.accounts.oauth2.initTokenClient({
                             client_id: CLIENT_ID,
-                            scope: SCOPES, // SCOPES ya incluye los de userinfo.profile y userinfo.email
+                            scope: SCOPES,
                             callback: handleTokenResponse,
                         });
                     } else {
@@ -147,7 +145,6 @@ export const useGoogleSheetService = () => {
                     headers.push(header);
                 });
 
-
                 const rows = values.slice(1).map((row: any[]) => {
                     const rowObject: Partial<SheetRow> = {};
                     headers.forEach((header: string, index: number) => {
@@ -173,6 +170,13 @@ export const useGoogleSheetService = () => {
         }
 
         try {
+            const currentDataResponse = await gapi.client.sheets.spreadsheets.values.get({
+                spreadsheetId: SPREADSHEET_ID,
+                range: `${SHEET_NAME}!A:Z`,
+            });
+
+            const currentRowCount = currentDataResponse.result.values ? currentDataResponse.result.values.length - 1 : 0;
+
             const headerResponse = await gapi.client.sheets.spreadsheets.values.get({
                 spreadsheetId: SPREADSHEET_ID,
                 range: `${SHEET_NAME}!A1:Z1`,
@@ -216,6 +220,9 @@ export const useGoogleSheetService = () => {
             });
 
             await listData();
+
+            return currentRowCount;
+
         } catch (err: any) {
             console.error("Error al añadir fila:", err);
             setError(err?.message || "Fallo al añadir la fila.");
@@ -293,7 +300,6 @@ export const useGoogleSheetService = () => {
             throw err;
         }
     }, [isSignedIn, listData]);
-
 
     const findDerivationColumn = useCallback(async (rowIndex: number, derivationKey: string) => {
         const sheetRowNumber = rowIndex + 2;
@@ -487,9 +493,6 @@ export const useGoogleSheetService = () => {
         }
     }, [isSignedIn, editCell]);
 
-
-
-
     return {
         initClient,
         signIn,
@@ -506,5 +509,4 @@ export const useGoogleSheetService = () => {
         editCell,
         uploadFileToDrive,
     };
-
 };

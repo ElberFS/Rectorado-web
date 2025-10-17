@@ -5,7 +5,6 @@ import AddDerivation from "./AddDerivation";
 import ConfirmationModal from "./ConfirmationModal";
 import EditDocument from "./EditDocument";
 
-
 interface EditingState {
     rowIndex: number;
     key: string;
@@ -33,7 +32,6 @@ interface DocumentEditingState {
     };
 }
 
-
 interface DataTableProps {
     rows: SheetRow[];
     expandedRow: number | null;
@@ -42,6 +40,7 @@ interface DataTableProps {
     onEditDerivation: (rowIndex: number, key: string, newValue: string) => Promise<void>;
     onDeleteDerivation: (rowIndex: number, key: string) => Promise<void>;
     onEditCell: (rowIndex: number, key: string, newValue: string) => Promise<void>;
+    onUploadFile: (file: File, rowIndex: number) => Promise<void>;
 }
 
 const DISPLAY_COLUMNS = [
@@ -59,7 +58,16 @@ const DISPLAY_COLUMNS = [
     { key: "asunto", label: "ASUNTO", width: "min-w-[180px] flex-1" },
 ];
 
-const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, onAddDerivation, onEditDerivation, onDeleteDerivation, onEditCell }) => {
+const DataTable: React.FC<DataTableProps> = ({ 
+    rows, 
+    expandedRow, 
+    onToggleRow, 
+    onAddDerivation, 
+    onEditDerivation, 
+    onDeleteDerivation, 
+    onEditCell,
+    onUploadFile 
+}) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [isAdding, setIsAdding] = useState<number | null>(null);
     const [editing, setEditing] = useState<EditingState | null>(null);
@@ -134,11 +142,10 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
         }
     };
 
-
     return (
         <>
             <div className="overflow-x-auto rounded-xl">
-                <table className="min-w-full divide-y divide-gray-700 table-fixed bg-white ">
+                <table className="min-w-full divide-y divide-gray-700 table-fixed bg-white">
                     <thead className="bg-gray-700 text-white">
                         <tr>
                             {DISPLAY_COLUMNS.map((col) => (
@@ -155,7 +162,7 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                         </tr>
                     </thead>
 
-                    <tbody className="divide-y divide-gray-200 ">
+                    <tbody className="divide-y divide-gray-200">
                         {paginatedRows.map((row: SheetRow, index: number) => {
                             const rowIndex = startIndex + index;
                             const isExpanded = expandedRow === rowIndex;
@@ -168,11 +175,11 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
 
                             return (
                                 <React.Fragment key={rowIndex}>
-                                    <tr className="hover:bg-gray-100  transition duration-200 even:bg-gray-50 ">
+                                    <tr className="hover:bg-gray-100 transition duration-200 even:bg-gray-50">
                                         {DISPLAY_COLUMNS.map((col) => (
                                             <td
                                                 key={`${rowIndex}-${col.key}`}
-                                                className={`px-3 py-4  align-top ${col.width} whitespace-normal ${col.key === 'fecha' ? 'text-xs' : 'text-sm'}`}
+                                                className={`px-3 py-4 align-top ${col.width} whitespace-normal ${col.key === 'fecha' ? 'text-xs' : 'text-sm'}`}
                                             >
                                                 {col.key === "asunto" ? (
                                                     <ExpandableText text={row[col.key] || "N/A"} limit={250} />
@@ -200,10 +207,8 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
 
                                                 <button
                                                     onClick={() => onToggleRow(rowIndex)}
-
                                                     className="bg-blue-600 text-white px-2 py-1 rounded-lg hover:bg-blue-700 transition text-xs font-semibold whitespace-nowrap"
                                                 >
-
                                                     <span className="sm:hidden">
                                                         {isExpanded ? "➖" : "➕"}
                                                     </span>
@@ -234,7 +239,6 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                                                     </span>
                                                 </button>
                                             </div>
-
                                         </td>
                                     </tr>
 
@@ -242,20 +246,20 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                                         <tr>
                                             <td
                                                 colSpan={DISPLAY_COLUMNS.length + 1}
-                                                className="bg-gray-50  px-6 py-6"
+                                                className="bg-gray-50 px-6 py-6"
                                             >
                                                 {derivations.length === 0 ? (
-                                                    <p className="text-gray-600 ">No hay derivaciones registradas.</p>
+                                                    <p className="text-gray-600">No hay derivaciones registradas.</p>
                                                 ) : (
                                                     <div className="space-y-4">
                                                         {derivations.map((d, i) => (
                                                             editing?.rowIndex === rowIndex && editing.key === d.key ? (
-                                                                <div key={i} className="flex space-x-2 p-4 bg-yellow-100  border-l-4 border-yellow-500 rounded-lg">
+                                                                <div key={i} className="flex space-x-2 p-4 bg-yellow-100 border-l-4 border-yellow-500 rounded-lg">
                                                                     <input
                                                                         type="text"
                                                                         value={editing.currentValue}
                                                                         onChange={(e) => setEditing({ ...editing, currentValue: e.target.value })}
-                                                                        className="flex-1 px-3 py-2 border rounded-lg text-sm text-gray-900 "
+                                                                        className="flex-1 px-3 py-2 border rounded-lg text-sm text-gray-900"
                                                                     />
                                                                     <button
                                                                         onClick={handleEditSave}
@@ -275,8 +279,8 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                                                                     key={i}
                                                                     className="border-l-4 border-blue-600 bg-white shadow-md rounded-lg p-4 flex justify-between items-start"
                                                                 >
-                                                                    <p className="text-sm text-gray-700  flex-1">
-                                                                        <span className="font-semibold text-blue-700 ">
+                                                                    <p className="text-sm text-gray-700 flex-1">
+                                                                        <span className="font-semibold text-blue-700">
                                                                             {d.key.replace(/_/g, " ")}:
                                                                         </span>{" "}
                                                                         {d.value}
@@ -284,14 +288,14 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                                                                     <div className="flex space-x-2 ml-4">
                                                                         <button
                                                                             onClick={() => setEditing({ rowIndex, key: d.key, currentValue: d.value })}
-                                                                            className="text-yellow-600 hover:text-yellow-800 transition p-1 rounded-full hover:bg-gray-200 "
+                                                                            className="text-yellow-600 hover:text-yellow-800 transition p-1 rounded-full hover:bg-gray-200"
                                                                             title="Editar"
                                                                         >
                                                                             ✏️
                                                                         </button>
                                                                         <button
                                                                             onClick={() => confirmDelete(rowIndex, d.key, d.value)}
-                                                                            className="text-red-600 hover:text-red-800 transition p-1 rounded-full hover:bg-gray-200 "
+                                                                            className="text-red-600 hover:text-red-800 transition p-1 rounded-full hover:bg-gray-200"
                                                                             title="Eliminar"
                                                                         >
                                                                             🗑️
@@ -304,7 +308,7 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                                                 )}
 
                                                 {addingState && (
-                                                    <p className="text-blue-500  mt-2 font-semibold">Guardando derivación... ⏳</p>
+                                                    <p className="text-blue-500 mt-2 font-semibold">Guardando derivación... ⏳</p>
                                                 )}
 
                                                 <AddDerivation
@@ -316,7 +320,6 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                                             </td>
                                         </tr>
                                     )}
-
                                 </React.Fragment>
                             );
                         })}
@@ -337,7 +340,7 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                 </button>
 
                 <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-600 ">
+                    <span className="text-sm text-gray-600">
                         Página
                     </span>
                     <input
@@ -346,9 +349,9 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                         onChange={handlePageInput}
                         min={1}
                         max={totalPages}
-                        className="w-16 px-2 py-1 border rounded text-center text-sm "
+                        className="w-16 px-2 py-1 border rounded text-center text-sm"
                     />
-                    <span className="text-sm text-gray-600 ">
+                    <span className="text-sm text-gray-600">
                         de {totalPages}
                     </span>
                 </div>
@@ -364,12 +367,13 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                     Siguiente
                 </button>
             </div>
+
             {docEditing && (
-                <div className="fixed inset-0 flex items-center justify-center  bg-opacity-50 z-50">
-                    <div className="bg-white  rounded-xl shadow-xl max-w-3xl w-full p-6 relative">
+                <div className="fixed inset-0 flex items-center justify-center bg-opacity-50 z-50">
+                    <div className="bg-white rounded-xl shadow-xl max-w-3xl w-full p-6 relative">
                         <button
                             onClick={() => setDocEditing(null)}
-                            className="absolute top-3 right-3 text-gray-600 hover:text-gray-900 "
+                            className="absolute top-3 right-3 text-gray-600 hover:text-gray-900"
                         >
                             ✖
                         </button>
@@ -377,7 +381,7 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                         <EditDocument
                             initialData={docEditing.formData}
                             disabled={false}
-                            onEditRow={async (updatedData) => {
+                            onEditRow={async (updatedData, file) => {
                                 try {
                                     const updatePromises = Object.keys(updatedData).map(key =>
                                         onEditCell(
@@ -387,6 +391,11 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                                         )
                                     );
                                     await Promise.all(updatePromises);
+
+                                    if (file) {
+                                        await onUploadFile(file, docEditing.rowIndex);
+                                    }
+
                                     setDocEditing(null);
                                 } catch (err) {
                                     console.error("Error al guardar cambios del documento:", err);
@@ -394,6 +403,7 @@ const DataTable: React.FC<DataTableProps> = ({ rows, expandedRow, onToggleRow, o
                                 }
                             }}
                             onSuccess={() => setDocEditing(null)}
+                            currentFileName={rows[docEditing.rowIndex]?.["enlace documento"] ? "Documento PDF" : ""}
                         />
                     </div>
                 </div>
