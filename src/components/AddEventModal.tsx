@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import type { CalendarEvent } from "./CalendarList";
 
 interface AddEventModalProps {
@@ -21,6 +21,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
 }) => {
     if (!isOpen) return null;
 
+    const [customDays, setCustomDays] = useState<string[]>([]);
+    const [showCustomSelector, setShowCustomSelector] = useState(false);
+
     const selectedDayDate = selectedDate ? new Date(selectedDate) : null;
     const formattedDateTitle = selectedDayDate
         ? selectedDayDate.toLocaleDateString("es-ES", { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
@@ -29,6 +32,40 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
     const inputClasses =
         "w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 shadow-sm placeholder-gray-400";
     const labelClasses = "block text-sm font-semibold text-gray-700 mb-1";
+
+    const daysOfWeek = [
+        { value: "Lunes", label: "Lunes" },
+        { value: "Martes", label: "Martes" },
+        { value: "Miércoles", label: "Miércoles" },
+        { value: "Jueves", label: "Jueves" },
+        { value: "Viernes", label: "Viernes" },
+        { value: "Sábado", label: "Sábado" },
+        { value: "Domingo", label: "Domingo" }
+    ];
+
+    const handleDayToggle = (day: string) => {
+        const updatedDays = customDays.includes(day)
+            ? customDays.filter(d => d !== day)
+            : [...customDays, day];
+        
+        setCustomDays(updatedDays);
+        setNewEvent({ 
+            ...newEvent, 
+            diasRepetidos: updatedDays.join(',') 
+        });
+    };
+
+    const handleRepetitionChange = (value: string) => {
+        if (value === "personalizado") {
+            setShowCustomSelector(true);
+            if (customDays.length > 0) {
+                setNewEvent({ ...newEvent, diasRepetidos: customDays.join(',') });
+            }
+        } else {
+            setShowCustomSelector(false);
+            setNewEvent({ ...newEvent, diasRepetidos: value });
+        }
+    };
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4 ">
@@ -64,7 +101,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                             <label className={labelClasses}>Fecha inicio</label>
                             <input
                                 type="date"
-                                value={newEvent.fechaInicio || selectedDate || ""}
+                                value={newEvent.fechaInicio || ""} 
                                 onChange={(e) =>
                                     setNewEvent({ ...newEvent, fechaInicio: e.target.value })
                                 }
@@ -79,6 +116,32 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                                 value={newEvent.fechaFin || ""}
                                 onChange={(e) =>
                                     setNewEvent({ ...newEvent, fechaFin: e.target.value })
+                                }
+                                className={inputClasses}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className={labelClasses}>Hora inicio</label>
+                            <input
+                                type="time"
+                                value={newEvent.horaInicio || ""}
+                                onChange={(e) =>
+                                    setNewEvent({ ...newEvent, horaInicio: e.target.value })
+                                }
+                                className={inputClasses}
+                            />
+                        </div>
+
+                        <div>
+                            <label className={labelClasses}>Hora fin</label>
+                            <input
+                                type="time"
+                                value={newEvent.horaFin || ""}
+                                onChange={(e) =>
+                                    setNewEvent({ ...newEvent, horaFin: e.target.value })
                                 }
                                 className={inputClasses}
                             />
@@ -141,6 +204,65 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                                 <option value="Cancelado">Cancelado</option>
                             </select>
                         </div>
+                    </div>
+
+                    <div>
+                        <label className={labelClasses}>Días de repetición</label>
+                        <select
+                            value={newEvent.diasRepetidos === customDays.join(',') ? "personalizado" : newEvent.diasRepetidos || ""}
+                            onChange={(e) => handleRepetitionChange(e.target.value)}
+                            className={inputClasses}
+                        >
+                            <option value="">No repetir</option>
+                            <option value="Lunes">Lunes</option>
+                            <option value="Martes">Martes</option>
+                            <option value="Miércoles">Miércoles</option>
+                            <option value="Jueves">Jueves</option>
+                            <option value="Viernes">Viernes</option>
+                            <option value="Sábado">Sábado</option>
+                            <option value="Domingo">Domingo</option>
+                            <option value="Lunes,Martes,Miércoles,Jueves,Viernes">Lunes a Viernes</option>
+                            <option value="Lunes,Martes,Miércoles,Jueves,Viernes,Sábado,Domingo">Todos los días</option>
+                            <option value="personalizado">Personalizado...</option>
+                        </select>
+                        
+                        {showCustomSelector && (
+                            <div className="mt-3 p-3 border border-gray-300 rounded-lg bg-gray-50">
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Selecciona los días:
+                                </label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {daysOfWeek.map(day => (
+                                        <label key={day.value} className="flex items-center space-x-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={customDays.includes(day.value)}
+                                                onChange={() => handleDayToggle(day.value)}
+                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                            />
+                                            <span className="text-sm text-gray-700">{day.label}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                                {customDays.length > 0 && (
+                                    <p className="text-xs text-green-600 mt-2">
+                                        Días seleccionados: {customDays.join(', ')}
+                                    </p>
+                                )}
+                            </div>
+                        )}
+                        
+                        <p className="text-xs text-gray-500 mt-1">
+                            Selecciona días específicos para repetición semanal
+                        </p>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <h4 className="font-semibold text-blue-800 mb-2">💡 Información sobre repeticiones</h4>
+                        <p className="text-xs text-blue-700">
+                            • Si defines fechas de inicio y fin diferentes, el evento se expandirá automáticamente a todos los días en ese rango.<br/>
+                            • Si seleccionas días de repetición, el evento solo aparecerá en esos días específicos dentro del rango de fechas.
+                        </p>
                     </div>
                 </div>
 

@@ -13,6 +13,9 @@ export type CalendarEvent = {
     estado?: string;
     fechaInicio?: string;
     fechaFin?: string;
+    horaInicio?: string;
+    horaFin?: string;
+    diasRepetidos?: string;
     sheetRowNumber?: number;
 };
 
@@ -36,15 +39,17 @@ type ViewMode = "Mes" | "Semana" | "Día";
 const formatDate = (d: Date) =>
 `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-
 const mapRawToEvent = (raw: RawCalendarRow): CalendarEvent => {
     return {
-        nombre: (raw as any)["nombre"] || "",
-        descripcion: (raw as any)["descripcion"] || "",
-        lugar: (raw as any)["lugar"] || "",
-        estado: (raw as any)["estado"] || "",
-        fechaInicio: (raw as any)["fecha inicio"] || "",
-        fechaFin: (raw as any)["fecha fin"] || (raw as any)["fecha inicio"] || "",
+        nombre: raw["Nombre"] || "",
+        descripcion: raw["Descripcion"] || "",
+        lugar: raw["Lugar"] || "",
+        estado: raw["Estado"] || "",
+        fechaInicio: raw["Fecha Inicio"] || "",
+        fechaFin: raw["Fecha Fin"] || "",
+        horaInicio: raw["Hora inicio"] || "",
+        horaFin: raw["Hora fin"] || "",
+        diasRepetidos: raw["Dias repetidos"] || "",
         sheetRowNumber: (raw as any).sheetRowNumber,
     };
 };
@@ -52,6 +57,7 @@ const mapRawToEvent = (raw: RawCalendarRow): CalendarEvent => {
 const CalendarList: React.FC = () => {
     const {
         calendarData,
+        expandedCalendarData,
         listCalendarEvents,
         addCalendarEvent,
         deleteCalendarEvent,
@@ -62,13 +68,13 @@ const CalendarList: React.FC = () => {
     const today = new Date();
     
     const [currentNavDate, setCurrentNavDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
-
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isDayModalOpen, setIsDayModalOpen] = useState(false);
     const [newEvent, setNewEvent] = useState<Partial<CalendarEvent>>({});
     const [viewMode, setViewMode] = useState<ViewMode>("Mes");
     const [events, setEvents] = useState<CalendarEvent[]>([]);
+    const [expandedEvents, setExpandedEvents] = useState<CalendarEvent[]>([]);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
 
@@ -84,6 +90,15 @@ const CalendarList: React.FC = () => {
             setEvents([]);
         }
     }, [calendarData]);
+
+    useEffect(() => {
+        if (Array.isArray(expandedCalendarData)) {
+            const mapped = expandedCalendarData.map(mapRawToEvent);
+            setExpandedEvents(mapped);
+        } else {
+            setExpandedEvents([]);
+        }
+    }, [expandedCalendarData]);
 
     const year = currentNavDate.getFullYear();
     const month = currentNavDate.getMonth();
@@ -125,7 +140,6 @@ const CalendarList: React.FC = () => {
         }
     }
 
-
     const handleSaveEvent = async () => {
         const eventToSave: CalendarEvent = {
             id: newEvent.id,
@@ -133,17 +147,23 @@ const CalendarList: React.FC = () => {
             descripcion: newEvent.descripcion || "",
             lugar: newEvent.lugar || "",
             estado: newEvent.estado || "Pendiente",
-            fechaInicio: newEvent.fechaInicio || selectedDate || "",
-            fechaFin: newEvent.fechaFin || newEvent.fechaInicio || selectedDate || "",
+            fechaInicio: newEvent.fechaInicio || "",
+            fechaFin: newEvent.fechaFin || newEvent.fechaInicio || "",
+            horaInicio: newEvent.horaInicio || "",
+            horaFin: newEvent.horaFin || "",
+            diasRepetidos: newEvent.diasRepetidos || "",
         };
 
         const rawToSave: any = {
-            "fecha inicio": eventToSave.fechaInicio || "",
-            "fecha fin": eventToSave.fechaFin || "",
-            "nombre": eventToSave.nombre || "",
-            "descripcion": eventToSave.descripcion || "",
-            "lugar": eventToSave.lugar || "",
-            "estado": eventToSave.estado || "",
+            "Fecha Inicio": eventToSave.fechaInicio || "",
+            "Fecha Fin": eventToSave.fechaFin || "",
+            "Hora inicio": eventToSave.horaInicio || "",
+            "Hora fin": eventToSave.horaFin || "",
+            "Nombre": eventToSave.nombre || "",
+            "Descripcion": eventToSave.descripcion || "",
+            "Lugar": eventToSave.lugar || "",
+            "Estado": eventToSave.estado || "",
+            "Dias repetidos": eventToSave.diasRepetidos || "",
         };
 
         try {
@@ -157,25 +177,16 @@ const CalendarList: React.FC = () => {
         }
     };
 
-
     const getEventsForDay = (date: string) => {
-        const [year, month, day] = date.split("-").map(Number);
-        const current = new Date(year, month - 1, day);
-        const currentDay = new Date(current.setHours(0, 0, 0, 0));
-
-        return events.filter((event) => {
+        return expandedEvents.filter((event) => {
             if (!event.fechaInicio) return false;
-
-            // 🔹 Crear la fecha de inicio del evento con hora local
-            const [y, m, d] = event.fechaInicio.split("-").map(Number);
-            const start = new Date(y, m - 1, d);
-            const startDay = new Date(start.setHours(0, 0, 0, 0));
-
-            const isStartDay = currentDay.getTime() === startDay.getTime();
-            return isStartDay;
+            
+            const eventDate = new Date(event.fechaInicio);
+            const targetDate = new Date(date);
+            
+            return eventDate.toDateString() === targetDate.toDateString();
         });
     };
-
 
     const getWeekDays = () => {
         const start = currentNavDate;
@@ -195,7 +206,6 @@ const CalendarList: React.FC = () => {
     const weekDayNames = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
     const renderDayView = () => {
-        // Asegura que la fecha seleccionada se interprete como medianoche local
         const dateToRender = selectedDate
             ? new Date(`${selectedDate}T00:00:00`)
             : currentNavDate;
@@ -205,7 +215,6 @@ const CalendarList: React.FC = () => {
         const dayName = dateToRender.toLocaleDateString("es-ES", { weekday: "long" });
         const dayOfMonth = dateToRender.getDate();
         const monthNameDay = dateToRender.toLocaleDateString("es-ES", { month: "long" });
-
 
         return (
             <div className="bg-white rounded-xl shadow-lg p-6 max-w-lg mx-auto">
@@ -218,6 +227,9 @@ const CalendarList: React.FC = () => {
                             {dayEvents.map((ev, idx) => (
                                 <div key={idx} className={`p-3 rounded-lg text-sm transition ${getColorByEstado(ev.estado)}`}>
                                     <p className="font-bold text-base">{ev.nombre}</p>
+                                    {(ev.horaInicio || ev.horaFin) && (
+                                        <p className="text-xs mt-1">⏰ {ev.horaInicio} - {ev.horaFin}</p>
+                                    )}
                                     {ev.lugar && <p className="text-xs mt-1">📍 {ev.lugar}</p>}
                                     {ev.descripcion && <p className="text-xs mt-1 text-gray-700">{ev.descripcion}</p>}
                                     <p className="text-xs mt-1 font-medium">Estado: {ev.estado}</p>
@@ -333,14 +345,11 @@ const CalendarList: React.FC = () => {
 
     const renderNavigationText = () => {
         const date = currentNavDate;
-
-        // Muestra siempre el Mes y el Año, independientemente de la vista (Mes, Semana, Día)
         return `${date.toLocaleDateString("es-ES", { month: "long" })}, ${date.getFullYear()}`;
     }
 
     return (
         <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
-
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4 bg-white p-4 rounded-xl shadow-lg sticky top-0 z-10">
                 <div className="flex items-center gap-4">
                     <button
@@ -380,8 +389,10 @@ const CalendarList: React.FC = () => {
                 </div>
                 <button
                     onClick={() => {
-                        setSelectedDate(formatDate(today));
-                        setNewEvent({});
+                        setNewEvent({
+                            fechaInicio: selectedDate || formatDate(today),
+                            estado: "Pendiente"
+                        });
                         setIsAddModalOpen(true);
                     }}
                     className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-xl shadow-lg transition transform hover:scale-[1.02] active:scale-[0.98]"
@@ -406,7 +417,7 @@ const CalendarList: React.FC = () => {
                 isOpen={isDayModalOpen}
                 onClose={() => setIsDayModalOpen(false)}
                 selectedDate={selectedDate}
-                events={events}
+                events={expandedEvents}
                 onAddEvent={() => {
                     setIsDayModalOpen(false);
                     setIsAddModalOpen(true);
@@ -420,27 +431,24 @@ const CalendarList: React.FC = () => {
                         if (selectedEvent?.sheetRowNumber === undefined) {
                             return;
                         }
-
                         await deleteCalendarEvent(selectedEvent.sheetRowNumber);
-
                         listCalendarEvents();
                     } catch (err: any) {
                         console.error("Error al eliminar:", err);
                     }
                 }}
-
             />
-
 
             <AddEventModal
                 isOpen={isAddModalOpen}
                 onClose={() => setIsAddModalOpen(false)}
                 onSave={handleSaveEvent}
-                newEvent={{ ...newEvent, fechaInicio: selectedDate || newEvent.fechaInicio }}
+                newEvent={newEvent}
                 setNewEvent={setNewEvent}
                 selectedDate={selectedDate}
                 events={events}
             />
+
             <EditEventModal
                 isOpen={isEditModalOpen}
                 onClose={() => setIsEditModalOpen(false)}
@@ -450,12 +458,15 @@ const CalendarList: React.FC = () => {
                         if (!updatedEvent.sheetRowNumber) throw new Error("Evento sin fila asociada en la hoja.");
 
                         const updates = [
-                            ["fecha inicio", updatedEvent.fechaInicio],
-                            ["fecha fin", updatedEvent.fechaFin],
-                            ["nombre", updatedEvent.nombre],
-                            ["descripcion", updatedEvent.descripcion],
-                            ["lugar", updatedEvent.lugar],
-                            ["estado", updatedEvent.estado],
+                            ["Fecha Inicio", updatedEvent.fechaInicio],
+                            ["Fecha Fin", updatedEvent.fechaFin],
+                            ["Hora inicio", updatedEvent.horaInicio],
+                            ["Hora fin", updatedEvent.horaFin],
+                            ["Nombre", updatedEvent.nombre],
+                            ["Descripcion", updatedEvent.descripcion],
+                            ["Lugar", updatedEvent.lugar],
+                            ["Estado", updatedEvent.estado],
+                            ["Dias repetidos", updatedEvent.diasRepetidos],
                         ];
 
                         for (const [col, value] of updates) {
@@ -469,8 +480,6 @@ const CalendarList: React.FC = () => {
                     }
                 }}
             />
-
-
         </div>
     );
 };

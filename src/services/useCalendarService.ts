@@ -1,21 +1,19 @@
-// useCalendarService.ts
-
 import { useState, useCallback } from "react";
 import { gapi } from "gapi-script";
 import {
     SPREADSHEET_ID,
     CALENDAR_SHEET_NAME,
     colIndexToLetter,
+    expandCalendarEvent
 } from "./config";
 import type { CalendarRow } from "./config";
 
-
 export const useCalendarService = () => {
     const [calendarData, setCalendarData] = useState<CalendarRow[]>([]);
+    const [expandedCalendarData, setExpandedCalendarData] = useState<CalendarRow[]>([]);
     const [calendarError, setCalendarError] = useState<string | null>(null);
 
-    const CALENDAR_HEADERS = ["fecha inicio", "fecha fin", "nombre", "descripcion", "lugar", "estado", "días repetición"];
-
+    const CALENDAR_HEADERS = ["Fecha Inicio", "Fecha Fin", "Hora inicio", "Hora fin", "Nombre", "Descripcion", "Lugar", "Estado", "Dias repetidos"];
 
     const listCalendarEvents = useCallback(async (): Promise<CalendarRow[]> => {
         try {
@@ -26,36 +24,40 @@ export const useCalendarService = () => {
 
             const response = await gapi.client.sheets.spreadsheets.values.get({
                 spreadsheetId: SPREADSHEET_ID,
-                range: `${CALENDAR_SHEET_NAME}!A:F`,
+                range: `${CALENDAR_SHEET_NAME}!A:I`,
             });
 
             const values = response.result.values;
 
             if (!values || values.length <= 1) {
                 setCalendarData([]);
+                setExpandedCalendarData([]);
                 setCalendarError(null);
                 return [];
             }
 
-            const headers = values[0].map((h: string) => String(h).trim().toLowerCase().replace(/\s+/g, " "));
+            const headers = values[0].map((h: string) => String(h).trim());
 
             const rows = values.slice(1).map((row: any[], rowIndex: number) => {
                 const rowObject: Partial<CalendarRow> = {};
                 headers.forEach((header: string, index: number) => {
                     const value = String(row[index] || "").trim();
-                    if (header === "días repetición") {
-                        (rowObject as any)[header] = value ? value.split(",").map(v => v.trim()) : [];
-                    } else {
-                        (rowObject as any)[header] = value;
-                    }
+                    (rowObject as any)[header] = value;
                 });
-
 
                 (rowObject as any).sheetRowNumber = rowIndex + 2;
                 return rowObject as CalendarRow;
             });
 
             setCalendarData(rows);
+
+            const expandedEvents: CalendarRow[] = [];
+            rows.forEach(event => {
+                const expanded = expandCalendarEvent(event);
+                expandedEvents.push(...expanded);
+            });
+            setExpandedCalendarData(expandedEvents);
+
             setCalendarError(null);
             return rows;
 
@@ -73,21 +75,16 @@ export const useCalendarService = () => {
                 throw new Error("Debes iniciar sesión para añadir eventos.");
             }
 
-
             const rowArray = CALENDAR_HEADERS.map(header => {
                 const value = (newEvent as any)[header];
-                if (header === "días repetición" && Array.isArray(value)) {
-                    return value.join(", "); // Guarda como "Lunes, Miércoles, Viernes"
-                }
                 return String(value ?? "").trim();
             });
-
 
             const resource = { values: [rowArray] };
 
             await gapi.client.sheets.spreadsheets.values.append({
                 spreadsheetId: SPREADSHEET_ID,
-                range: `${CALENDAR_SHEET_NAME}!A:F`,
+                range: `${CALENDAR_SHEET_NAME}!A:I`,
                 valueInputOption: "USER_ENTERED",
                 insertDataOption: "INSERT_ROWS",
                 resource,
@@ -101,8 +98,6 @@ export const useCalendarService = () => {
             throw new Error(msg);
         }
     }, [listCalendarEvents]);
-
-
 
     const editCalendarCell = useCallback(async (sheetRowNumber: number, columnKey: keyof CalendarRow, newValue: string) => {
         try {
@@ -135,9 +130,6 @@ export const useCalendarService = () => {
             throw new Error(msg);
         }
     }, [listCalendarEvents]);
-
-
-    // useCalendarService.ts
 
     const deleteCalendarEvent = useCallback(async (sheetRowNumber: number) => {
         try {
@@ -181,7 +173,6 @@ export const useCalendarService = () => {
 
             await listCalendarEvents();
 
-
         } catch (err: any) {
             console.error("Error al eliminar evento:", err);
             const msg = err.result?.error?.message || "Fallo al eliminar el evento.";
@@ -190,9 +181,9 @@ export const useCalendarService = () => {
         }
     }, [listCalendarEvents]);
 
-
     return {
         calendarData,
+        expandedCalendarData,
         calendarError,
         listCalendarEvents,
         addCalendarEvent,
